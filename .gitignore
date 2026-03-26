@@ -1,0 +1,17 @@
+node_modules/
+**/node_modules/
+dist/
+dist-ssr/
+*.local
+.next/
+**/ .next/
+out/
+build/
+.env
+.env*.local
+.vercel
+.turbo
+.DS_Store
+*.log
+.vscode/
+.idea/
