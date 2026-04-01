@@ -1,5 +1,6 @@
-import { Gift, BookOpen, Search, ArrowRight } from 'lucide-react';
+import { Gift, BookOpen, ArrowRight } from 'lucide-react';
 import heroImage from './Image/tellexmystery.webp';
+import vibePickImg from './Image/vibepick_experience.png';
 
 export default function HeroSection() {
   return (
@@ -59,7 +60,7 @@ export default function HeroSection() {
 
             {/* Primary CTA */}
             <a
-              href="http://localhost:3000/flow?type=mystery"
+              href="https://tellexsystem.netlify.app"
               className="group inline-flex items-center justify-center gap-3 bg-[#2b8011] text-white px-[28px] py-[16px] rounded-[14px] font-semibold text-lg transition-all duration-300 ease-out hover:-translate-y-[2px] hover:scale-[1.03] shadow-[0_10px_25px_rgba(0,0,0,0.25)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.3)] w-full sm:w-auto"
             >
               Try Mystery Pick
@@ -75,66 +76,34 @@ export default function HeroSection() {
               <div className="h-[1px] flex-1 bg-[#e1cfbc]/20"></div>
             </div>
 
-            {/* Unique Discovery Paths: Image Based Cards */}
-            <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-5">
+            {/* Unique Discovery Paths: Image Based Card */}
+            <div className="w-full flex justify-center">
 
-              {/* Path 1: Vibe Pick */}
+              {/* Path 1: Vibe Pick - Centered & Enlarged */}
               <a
-                href="http://localhost:3000/flow?type=vibe"
-                className="group relative h-[140px] sm:h-[150px] rounded-[20px] overflow-hidden block shadow-lg"
+                href="https://tellexsystem.netlify.app"
+                className="group relative h-[160px] sm:h-[180px] w-full max-w-xl rounded-[24px] overflow-hidden block shadow-2xl transition-all duration-500 hover:scale-[1.02]"
               >
                 {/* Background Image */}
                 <img
-                  src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=800&auto=format&fit=crop"
-                  alt="Vibe Pick"
+                  src={vibePickImg}
+                  alt="Vibe Pick Experience"
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-110"
                 />
                 {/* Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#091a10]/95 via-[#0a2014]/40 to-transparent transition-opacity duration-500 group-hover:opacity-90"></div>
 
                 {/* Content */}
-                <div className="absolute inset-x-0 bottom-0 p-5 flex flex-col justify-end">
-                  <div className="flex items-center gap-2 mb-1.5 transform transition-transform duration-500 group-hover:-translate-y-1">
-                    <BookOpen className="w-[15px] h-[15px] text-[#ead8c0]" />
-                    <span className="text-white font-bold text-[13px] tracking-widest uppercase drop-shadow-md">
+                <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8 flex flex-col justify-end">
+                  <div className="flex items-center gap-3 mb-2 transform transition-transform duration-500 group-hover:-translate-y-1">
+                    <BookOpen className="w-[18px] h-[18px] text-[#ead8c0]" />
+                    <span className="text-white font-bold text-[14px] sm:text-[15px] tracking-[0.2em] uppercase drop-shadow-md">
                       Vibe Pick
                     </span>
                   </div>
                   <div className="min-h-[40px] flex items-start">
-                    <p className="text-[#e1cfbc]/90 text-[13px] leading-snug w-full font-medium transform transition-all duration-500 translate-y-2 opacity-80 group-hover:translate-y-0 group-hover:opacity-100 drop-shadow-md">
+                    <p className="text-[#e1cfbc] text-[15px] sm:text-[16px] leading-snug w-full font-medium transform transition-all duration-500 translate-y-2 opacity-90 group-hover:translate-y-0 group-hover:opacity-100 drop-shadow-md max-w-md">
                       Emotional discovery based on your mood.
-                    </p>
-                  </div>
-                </div>
-              </a>
-
-              {/* Path 2: Direct Pick */}
-              <a
-                href="https://tellex-4.myshopify.com/collections/all"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group relative h-[140px] sm:h-[150px] rounded-[20px] overflow-hidden block shadow-lg"
-              >
-                {/* Background Image */}
-                <img
-                  src="https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=800&auto=format&fit=crop"
-                  alt="Direct Pick"
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-110"
-                />
-                {/* Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#091a10]/95 via-[#0a2014]/40 to-transparent transition-opacity duration-500 group-hover:opacity-90"></div>
-
-                {/* Content */}
-                <div className="absolute inset-x-0 bottom-0 p-5 flex flex-col justify-end">
-                  <div className="flex items-center gap-2 mb-1.5 transform transition-transform duration-500 group-hover:-translate-y-1">
-                    <Search className="w-[15px] h-[15px] text-[#ead8c0]" />
-                    <span className="text-white font-bold text-[13px] tracking-widest uppercase drop-shadow-md">
-                      Direct Pick
-                    </span>
-                  </div>
-                  <div className="min-h-[40px] flex items-start">
-                    <p className="text-[#e1cfbc]/90 text-[13px] leading-snug w-full font-medium transform transition-all duration-500 translate-y-2 opacity-80 group-hover:translate-y-0 group-hover:opacity-100 drop-shadow-md">
-                      Browse our full library manually.
                     </p>
                   </div>
                 </div>

@@ -1,28 +1,27 @@
-import book1 from './Image/book1.webp';
-import book2 from './Image/book2.webp';
-import book3 from './Image/book3.webp';
-import book4 from './Image/book4.webp';
-import book5 from './Image/book5.webp';
-import book6 from './Image/book6.webp';
-import book7 from './Image/book7.webp';
-
+import IM1 from './Image/IM1.webp';
+import IM2 from './Image/IM2.webp';
+import IM3 from './Image/IM3.webp';
+import IM4 from './Image/IM4.webp';
+import IM5 from './Image/IM5.webp';
+import IM6 from './Image/IM6.webp';
 
 export default function ImageMarquee() {
-  const images = [book1, book2, book3, book4, book5, book6, book7 ];
+  const images = [IM1, IM2, IM3, IM4, IM5, IM6];
   const duplicatedImages = [...images, ...images];
 
   return (
     <section className="carousel-section">
-      
-
       <div className="carousel-container">
         {duplicatedImages.map((img, index) => (
-          <div key={index} className="carousel-card">
-            <div className="image-frame">
-              <img src={img} alt={`Book ${index + 1}`}
-              loading="lazy"
-              fetchPriority="low"
-              decoding="async"
+          <div key={index} className="carousel-card relative overflow-hidden group">
+            <div className="image-frame w-full h-full">
+              <img 
+                src={img} 
+                alt={`Book ${index + 1}`}
+                loading="lazy"
+                fetchPriority="low"
+                decoding="async"
+                className="w-full h-full object-contain transition-transform duration-700 ease-out group-hover:scale-105"
                />
             </div>
           </div>

@@ -2,7 +2,7 @@ import {  Instagram } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="bg-tellex-dark-green border-t border-tellex-white/10">
+    <footer className="bg-[#0E462B] border-t border-tellex-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10">
           <div className="col-span-1 sm:col-span-2 lg:col-span-2">

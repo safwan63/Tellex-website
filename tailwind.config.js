@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        'tellex-dark-green': '#18412e',
+        'tellex-dark-green': '#0E462B',
         'tellex-forest-green': '#0E462B',
         'tellex-white': '#FFFFFF',
         'tellex-off-white': '#FAF9F6',

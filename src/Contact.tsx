@@ -53,7 +53,7 @@ export default function Contact() {
   ];
 
   return (
-    <main className="min-h-screen bg-tellex-dark-green">
+    <main className="min-h-screen bg-[#0E462B]">
       <Navbar />
 
       <Hero
@@ -90,7 +90,7 @@ export default function Contact() {
 
               <div className="space-y-4 sm:space-y-6 mb-8 sm:mb-12">
                 <div className="flex items-start space-x-3 sm:space-x-4">
-                  <div className="p-2 sm:p-3 bg-tellex-dark-green/10 rounded-lg">
+                  <div className="p-2 sm:p-3 bg-[#0E462B]/10 rounded-lg">
                     <MapPin className="text-tellex-dark-green" size={20} />
                   </div>
                   <p className="text-tellex-black/70 text-xs sm:text-sm">
@@ -100,14 +100,14 @@ export default function Contact() {
                 </div>
 
                 <div className="flex items-start space-x-3 sm:space-x-4">
-                  <div className="p-2 sm:p-3 bg-tellex-dark-green/10 rounded-lg">
+                  <div className="p-2 sm:p-3 bg-[#0E462B]/10 rounded-lg">
                     <Phone className="text-tellex-dark-green" size={20} />
                   </div>
                   <p className="text-tellex-black/70 text-xs sm:text-sm">+91 8590543842</p>
                 </div>
 
                 <div className="flex items-start space-x-3 sm:space-x-4">
-                  <div className="p-2 sm:p-3 bg-tellex-dark-green/10 rounded-lg">
+                  <div className="p-2 sm:p-3 bg-[#0E462B]/10 rounded-lg">
                     <Mail className="text-tellex-dark-green" size={20} />
                   </div>
                   <p className="text-tellex-black/70 text-xs sm:text-sm">
@@ -116,7 +116,7 @@ export default function Contact() {
                 </div>
 
                 <div className="flex items-start space-x-3 sm:space-x-4">
-                  <div className="p-2 sm:p-3 bg-tellex-dark-green/10 rounded-lg">
+                  <div className="p-2 sm:p-3 bg-[#0E462B]/10 rounded-lg">
                     <Clock className="text-tellex-dark-green" size={20} />
                   </div>
                   <p className="text-tellex-black/70 text-xs sm:text-sm">24/7</p>
@@ -128,7 +128,7 @@ export default function Contact() {
       </section>
 
       {/* ✅ FAQ SECTION */}
-      <section id="faqs" className="py-12 sm:py-16 md:py-20 bg-tellex-dark-green">
+      <section id="faqs" className="py-12 sm:py-16 md:py-20 bg-[#0E462B]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2
             className="text-2xl sm:text-3xl md:text-4xl font-bold text-tellex-white text-center mb-8 sm:mb-12"

@@ -59,7 +59,7 @@ video {
   display: flex;
   gap: 20px;
   width: max-content;
-  animation: marquee-scroll 40s linear infinite;
+  animation: marquee-scroll 80s linear infinite;
   pointer-events: none;
 }
 
@@ -109,10 +109,7 @@ video {
 
   text-align: center;
 
-  /* 🔑 KEY FIXES */
-  background-color: #000000;   /* solid background */
-  padding: 6px 10px;
-  border-radius: 6px;
+  /* removed old background/padding styles */
 
   /* 🔑 makes text sharp while moving */
   transform: translateZ(0);
@@ -185,7 +182,6 @@ video {
 
   .carousel-text {
     font-size: 1rem;
-    background: rgba(0, 0, 0, 0.25);
   }
 }
 

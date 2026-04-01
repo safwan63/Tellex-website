@@ -7,7 +7,10 @@ import {
   Moon, Wand2, MessageCircle, Brain, Target, BookOpen
 } from 'lucide-react';
 import { useRef, useEffect, useState } from 'react';
-import mysteryBoxImage from './components/Image/premium_mystery_box.png';
+import mysteryBoxImage from './components/Image/boxhold.webp';
+import vibePickImg from './components/Image/vibepick_experience.png';
+import CL1 from './components/Image/CL1.webp';
+import CL2 from './components/Image/CL2.webp';
 
 /* ─── Step data ─────────────────────────────────────── */
 const MYSTERY_STEPS = [
@@ -113,8 +116,7 @@ function HowTellexWorksSection() {
     }, 220);
   };
 
-  const vibeBookImg =
-    'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&q=80&w=800';
+  const vibeBookImg = vibePickImg;
 
   return (
     <section
@@ -219,7 +221,11 @@ function HowTellexWorksSection() {
                 background: 'radial-gradient(ellipse 65% 65% at 50% 50%, rgba(225,207,188,0.08) 0%, transparent 70%)',
               }}
             />
-            <div className="relative w-full" style={{ maxWidth: 380 }}>
+            <div 
+              className="relative w-full cursor-pointer group" 
+              style={{ maxWidth: 380 }}
+              onClick={() => window.location.href = `https://tellexsystem.netlify.app`}
+            >
               {/* Ground shadow */}
               <div
                 className="absolute pointer-events-none"
@@ -287,6 +293,32 @@ function HowTellexWorksSection() {
                     visible={stepsVisible}
                   />
                 ))}
+
+                {/* Launch Button at bottom of timeline */}
+                <div
+                  className="mt-4 pt-4 border-t border-white/10"
+                  style={{
+                    opacity: stepsVisible ? 1 : 0,
+                    transform: stepsVisible ? 'translateY(0)' : 'translateY(10px)',
+                    transition: 'all 0.5s ease 0.4s',
+                  }}
+                >
+                  <a
+                    href={`https://tellexsystem.netlify.app`}
+                    className="flex items-center justify-center gap-2 w-full py-4 rounded-xl font-bold transition-all duration-300 group"
+                    style={{
+                      background: active === 'mystery' ? '#e1cfbc' : '#2b8011',
+                      color: active === 'mystery' ? '#0E462B' : '#FFFFFF',
+                      boxShadow: '0 10px 20px rgba(0,0,0,0.15)',
+                    }}
+                  >
+                    {active === 'mystery' ? 'Launch Mystery Pick' : 'Start Vibe Journey'}
+                    <Sparkles size={18} className="group-hover:rotate-12 transition-transform" />
+                  </a>
+                  <p className="text-center text-[11px] text-white/40 mt-3 tracking-wider uppercase font-medium">
+                    {active === 'mystery' ? 'Requires Secured Login' : 'Secure Experience'}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -358,50 +390,34 @@ export default function Home() {
             }
           `}} />
 
-          {/* Testimonial Cards Carousel */}
+          {/* Testimonial Cards */}
           <div
             id="testimonial-scroll"
-            className="flex gap-6 sm:gap-8 overflow-x-auto pb-12 pt-4 snap-x snap-mandatory scrollbar-hide w-full"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            className="flex flex-col md:flex-row justify-center items-center gap-8 lg:gap-12 pb-12 pt-4 w-full"
           >
             {[
               {
-                name: "Emily J.",
+                name: "Shahma",
                 text: "Opening this box felt magical. The book was a perfect match for my mood, couldn't put it down.",
-                img: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=600"
+                img: CL1
               },
               {
-                name: "Marcus T.",
+                name: "Tanya",
                 text: "Never knew a mystery book could be exactly what I needed. Everything feels incredibly premium.",
-                img: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600"
-              },
-              {
-                name: "Sarah L.",
-                text: "Beautifully wrapped and surprisingly accurate. An amazing gift to yourself when you need a pick-me-up.",
-                img: "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&q=80&w=600"
-              },
-              {
-                name: "David K.",
-                text: "The sheer care in selecting this book amazed me. They truly listen to your vibe.",
-                img: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=600"
-              },
-              {
-                name: "Olivia R.",
-                text: "This felt like a warm hug in a box. The whole experience from unboxing to reading was flawless.",
-                img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600"
+                img: CL2
               }
             ].map((t, idx) => (
               <div
                 key={idx}
-                className="snap-start flex-none w-[280px] sm:w-[300px] bg-white rounded-3xl shadow-[0_8px_25px_rgba(0,0,0,0.06)] flex flex-col group transition-all duration-500 ease-out hover:-translate-y-2 hover:shadow-[0_15px_35px_rgba(0,0,0,0.1)] cursor-pointer relative overflow-hidden"
+                className="flex-none w-[340px] sm:w-[400px] lg:w-[460px] bg-white rounded-3xl shadow-[0_8px_25px_rgba(0,0,0,0.06)] flex flex-col group transition-all duration-500 ease-out hover:-translate-y-2 hover:shadow-[0_15px_35px_rgba(0,0,0,0.1)] cursor-pointer relative overflow-hidden"
               >
-                {/* Image at top (fully covering top area) */}
-                <div className="w-full h-[220px] overflow-hidden relative">
-                  <div className="absolute inset-0 bg-[#0E462B]/5 z-10 transition-colors duration-500 ease-out group-hover:bg-transparent"></div>
+                {/* Image at top (fully covering top area but contained to avoid cropping) */}
+                <div className="w-full h-[400px] sm:h-[480px] lg:h-[550px] overflow-hidden relative bg-[#0E462B]/5 flex items-center justify-center p-4">
+                  <div className="absolute inset-0 bg-[#0E462B]/5 z-10 transition-colors duration-500 ease-out group-hover:bg-transparent pointer-events-none"></div>
                   <img
                     src={t.img}
-                    alt={`User ${t.name}`}
-                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                    alt={`Customer ${t.name}`}
+                    className="w-full h-full object-contain transition-transform duration-700 ease-out group-hover:scale-[1.03]"
                   />
                 </div>
 
@@ -445,7 +461,10 @@ export default function Home() {
 
             {/* Left side: Premium Image */}
             <div className="relative group flex justify-center lg:justify-start order-1 lg:order-none">
-              <div className="relative w-full max-w-[500px] lg:max-w-[550px] transition-transform duration-700 ease-out hover:-translate-y-2 z-20">
+              <div 
+                className="relative w-full max-w-[500px] lg:max-w-[550px] transition-transform duration-700 ease-out hover:-translate-y-2 z-20 cursor-pointer"
+                onClick={() => window.location.href = "https://tellexsystem.netlify.app"}
+              >
                 <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-[85%] h-[30px] bg-black/40 blur-[20px] rounded-[100%] pointer-events-none -z-10"></div>
                 <img
                   src={mysteryBoxImage}
@@ -494,7 +513,7 @@ export default function Home() {
 
               {/* Glowing CTA */}
               <a
-                href="http://localhost:3000/flow?type=mystery"
+                href="https://tellexsystem.netlify.app"
                 className="mt-12 inline-flex items-center justify-center gap-3 bg-[#0E462B] text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-[#135d39] transition-all duration-300 transform hover:-translate-y-1 shadow-[0_10px_20px_rgba(14,70,43,0.2)] hover:shadow-[0_15px_30px_rgba(14,70,43,0.3)] group relative overflow-hidden"
               >
                 <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-[150%] skew-x-[-20deg] group-hover:translate-x-[150%] transition-transform duration-700 ease-out"></div>
@@ -508,27 +527,9 @@ export default function Home() {
 
       <HowTellexWorksSection />
 
-      <section className="pt-20 pb-10 bg-[#FAF9F6] relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#0E462B]/5 border border-[#0E462B]/10 mb-5">
-            <Sparkles className="w-4 h-4 text-[#2b8011]" />
-            <span className="text-[#0E462B] text-[12px] font-bold tracking-widest uppercase">The Collection</span>
-          </div>
-          <h2
-            className="text-4xl sm:text-5xl lg:text-[56px] font-bold text-[#0E462B] tracking-tight leading-tight"
-            style={{ fontFamily: "'Playfair Display', serif" }}
-          >
-            Explore by <span className="text-[#2b8011] italic">Vibe</span>
-          </h2>
-          <p className="mt-5 text-[17px] sm:text-[19px] text-[#0E462B]/70 max-w-2xl mx-auto font-light leading-relaxed">
-            A glimpse into our stunning library, carefully curated to match every imaginable mood and aesthetic.
-          </p>
-        </div>
-
-        <div className="relative pb-10">
-          <ImageMarquee />
-        </div>
-      </section>
+      <div className="w-full bg-[#0E462B] pb-16">
+        <ImageMarquee />
+      </div>
 
       <section className="py-12 sm:py-16 md:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

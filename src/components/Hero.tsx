@@ -9,7 +9,7 @@ interface HeroProps {
 
 export default function Hero({ title, subtitle, ctaText, ctaLink, showCta = true, bannerImage }: HeroProps) {
   return (
-    <section className="relative bg-tellex-dark-green py-12 sm:py-16 md:py-24 lg:py-32 overflow-hidden">
+    <section className="relative bg-[#0E462B] py-12 sm:py-16 md:py-24 lg:py-32 overflow-hidden">
       {bannerImage && (
         <div className="absolute inset-0">
           <img
@@ -17,7 +17,7 @@ export default function Hero({ title, subtitle, ctaText, ctaLink, showCta = true
             alt="Banner"
             className="w-full h-full object-cover opacity-20"
           />
-          <div className="absolute inset-0 bg-tellex-dark-green/60" />
+          <div className="absolute inset-0 bg-[#0E462B]/60" />
         </div>
       )}
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

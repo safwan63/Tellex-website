@@ -42,21 +42,19 @@ export default function Navbar() {
 
   const getLinkClass = (href: string) => {
     const isActive = currentPath === href;
-    return `px-3 py-2 text-base font-medium rounded-md ${
-      isActive ? '' : 'text-white hover:text-white'
+    return `px-3 py-2 text-base font-medium rounded-md transition-colors duration-300 ${
+      isActive ? 'text-[#e1cfbc]' : 'text-white/90 hover:text-[#e1cfbc]'
     }`;
   };
 
-  const getLinkStyle = (href: string) => {
-    const isActive = currentPath === href;
-    return isActive ? { color: '#e1cfbc' } : {};
-  };
+  const isExplorePage = currentPath === '/explore';
+  const shouldApplyGlassEffect = isScrolled || isExplorePage;
 
   return (
     <nav
-      className={`fixed top-0 w-full z-50 transition-all duration-300 ease-in-out ${
-        isScrolled
-          ? 'bg-[rgba(14,70,43,0.6)] backdrop-blur-[12px] shadow-md border-b border-white/10'
+      className={`fixed top-0 w-full z-50 transition-all duration-500 ease-in-out ${
+        shouldApplyGlassEffect
+          ? 'bg-[#0E462B]/85 backdrop-blur-md shadow-lg border-b border-white/10'
           : 'bg-transparent'
       }`}
     >
@@ -80,7 +78,6 @@ export default function Navbar() {
                   window.history.pushState({}, '', '/');
                 }}
                 className={getLinkClass('/')}
-                style={getLinkStyle('/')}
               >
                 Home
               </a>
@@ -92,7 +89,6 @@ export default function Navbar() {
                   window.history.pushState({}, '', '/explore');
                 }}
                 className={getLinkClass('/explore')}
-                style={getLinkStyle('/explore')}
               >
                 Explore
               </a>
@@ -104,7 +100,6 @@ export default function Navbar() {
                   window.history.pushState({}, '', '/about');
                 }}
                 className={getLinkClass('/about')}
-                style={getLinkStyle('/about')}
               >
                 About
               </a>
@@ -116,7 +111,6 @@ export default function Navbar() {
                   window.history.pushState({}, '', '/contact');
                 }}
                 className={getLinkClass('/contact')}
-                style={getLinkStyle('/contact')}
               >
                 Contact
               </a>
@@ -149,7 +143,6 @@ export default function Navbar() {
                 handleNavClick('/');
               }}
               className={`block py-3 text-base font-medium ${getLinkClass('/')}`}
-              style={getLinkStyle('/')}
             >
               Home
             </a>
@@ -160,7 +153,6 @@ export default function Navbar() {
                 handleNavClick('/explore');
               }}
               className={`block py-3 text-base font-medium ${getLinkClass('/explore')}`}
-              style={getLinkStyle('/explore')}
             >
               Explore
             </a>
@@ -171,7 +163,6 @@ export default function Navbar() {
                 handleNavClick('/about');
               }}
               className={`block py-3 text-base font-medium ${getLinkClass('/about')}`}
-              style={getLinkStyle('/about')}
             >
               About
             </a>
@@ -182,7 +173,6 @@ export default function Navbar() {
                 handleNavClick('/contact');
               }}
               className={`block py-3 text-base font-medium ${getLinkClass('/contact')}`}
-              style={getLinkStyle('/contact')}
             >
               Contact
             </a>
