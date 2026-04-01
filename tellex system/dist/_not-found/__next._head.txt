@@ -1,0 +1,6 @@
+1:"$Sreact.fragment"
+2:I[82104,["/_next/static/chunks/9e69d72da2ea5e03.js","/_next/static/chunks/dcec0fbfc4bc37b6.js"],"ViewportBoundary"]
+3:I[82104,["/_next/static/chunks/9e69d72da2ea5e03.js","/_next/static/chunks/dcec0fbfc4bc37b6.js"],"MetadataBoundary"]
+4:"$Sreact.suspense"
+5:I[90027,["/_next/static/chunks/9e69d72da2ea5e03.js","/_next/static/chunks/dcec0fbfc4bc37b6.js"],"IconMark"]
+0:{"buildId":"QvJ6_WAHdbHVCh2PmC1ma","rsc":["$","$1","h",{"children":[["$","meta",null,{"name":"robots","content":"noindex"}],["$","$L2",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","div",null,{"hidden":true,"children":["$","$L3",null,{"children":["$","$4",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"Tellex – Your Next Book, Curated for You"}],["$","meta","1",{"name":"description","content":"Tellex curates books based on your vibe using intelligent systems and human care. Discover Vibe Pick, Mystery Pick, and Direct Pick."}],["$","link","2",{"rel":"icon","href":"/favicon.ico?favicon.0b3bf435.ico","sizes":"256x256","type":"image/x-icon"}],["$","$L5","3",{}]]}]}]}],null]}],"loading":null,"isPartial":false}
