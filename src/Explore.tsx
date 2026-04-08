@@ -190,7 +190,7 @@ export default function Explore() {
                       }}
 
                       onClick={() => {
-                        window.location.href = 'https://tellexsystem.netlify.app';
+                        window.location.href = '/flow?type=mystery';
                       }}
                       
                       onMouseEnter={(e) => {
@@ -251,7 +251,7 @@ export default function Explore() {
                     {/* TELLEX Mystery Box image */}
                     <div 
                       className="relative max-w-[80%] cursor-pointer group"
-                      onClick={() => window.location.href = "https://tellexsystem.netlify.app"}
+                      onClick={() => window.location.href = "/flow?type=mystery"}
                     >
                       <img
                         src={tellexBoxImg}
@@ -338,7 +338,7 @@ export default function Explore() {
                   {/* CTA Button */}
                   <div className="pt-4">
                     <a
-                      href="https://tellexsystem.netlify.app"
+                      href="/flow?type=vibe"
                     >
                       <button
                         className="inline-flex items-center justify-center px-6 sm:px-8 py-2.5 sm:py-3.5 text-sm sm:text-base md:text-lg rounded-md transition-all duration-300 hover:opacity-90"
@@ -385,7 +385,7 @@ export default function Explore() {
                     {/* Inner framed image + book */}
                     <div
                       className="relative rounded-xl overflow-hidden cursor-pointer group"
-                      onClick={() => window.location.href = "https://tellexsystem.netlify.app"}
+                      onClick={() => window.location.href = "/flow?type=vibe"}
                       style={{
                         borderRadius: '1.1rem',
                         border: '1px solid #e1cfbc',
@@ -458,7 +458,7 @@ export default function Explore() {
           </p>
           <button
             onClick={() => {
-               window.location.href = 'https://tellexsystem.netlify.app';
+               window.location.href = '/flow?type=mystery';
             }}
             className="bg-tellex-dark-green hover:bg-tellex-dark-green/90 text-tellex-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-medium"
           >

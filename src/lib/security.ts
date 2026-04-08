@@ -4,15 +4,12 @@
 
 /**
  * Sanitizes user input to prevent XSS attacks
- * Removes HTML tags and escapes special characters
  */
 export function sanitizeInput(input: string): string {
   if (!input) return '';
   
-  // Remove HTML tags
   let sanitized = input.replace(/<[^>]*>/g, '');
   
-  // Escape special characters that could be used in HTML context
   const escapeMap: Record<string, string> = {
     '&': '&amp;',
     '<': '&lt;',
@@ -26,22 +23,17 @@ export function sanitizeInput(input: string): string {
 }
 
 /**
- * Sanitizes text for CSV export to prevent CSV injection attacks
- * Removes formula injection characters (=, +, -, @, \t, \r)
+ * Sanitizes text for CSV export
  */
 export function sanitizeForCSV(input: string | number): string {
   if (input === null || input === undefined) return '';
   
   const str = String(input);
   
-  // Remove or escape characters that could be used for CSV injection
-  // Formula injection characters: =, +, -, @, tab, carriage return
   if (/^[=+\-@\t\r]/.test(str)) {
-    // Prefix with single quote to prevent formula execution
-    return "'" + str.replace(/['"]/g, '""'); // Escape quotes
+    return "'" + str.replace(/['"]/g, '""');
   }
   
-  // Escape quotes for CSV
   return str.replace(/"/g, '""');
 }
 
@@ -53,9 +45,6 @@ export function isValidEmail(email: string): boolean {
   return emailRegex.test(email);
 }
 
-/**
- * Validates form input lengths
- */
 export interface ValidationResult {
   isValid: boolean;
   errors: string[];
@@ -69,14 +58,12 @@ export function validateContactForm(data: {
 }): ValidationResult {
   const errors: string[] = [];
   
-  // Name validation
   if (!data.name || data.name.trim().length === 0) {
     errors.push('Name is required');
   } else if (data.name.length > 100) {
     errors.push('Name must be 100 characters or less');
   }
   
-  // Email validation
   if (!data.email || data.email.trim().length === 0) {
     errors.push('Email is required');
   } else if (!isValidEmail(data.email)) {
@@ -85,14 +72,12 @@ export function validateContactForm(data: {
     errors.push('Email must be 255 characters or less');
   }
   
-  // Subject validation
   if (!data.subject || data.subject.trim().length === 0) {
     errors.push('Subject is required');
   } else if (data.subject.length > 200) {
     errors.push('Subject must be 200 characters or less');
   }
   
-  // Message validation
   if (!data.message || data.message.trim().length === 0) {
     errors.push('Message is required');
   } else if (data.message.length > 5000) {
@@ -107,8 +92,6 @@ export function validateContactForm(data: {
 
 /**
  * Rate limiting helper using localStorage
- * Note: This is client-side only and can be bypassed. For production,
- * implement server-side rate limiting.
  */
 export function checkRateLimit(key: string, maxAttempts: number = 5, windowMs: number = 60000): boolean {
   const now = Date.now();
@@ -123,39 +106,19 @@ export function checkRateLimit(key: string, maxAttempts: number = 5, windowMs: n
     
     const data = JSON.parse(stored);
     
-    // Reset if window has passed
     if (now > data.resetAt) {
       localStorage.setItem(storageKey, JSON.stringify({ count: 1, resetAt: now + windowMs }));
       return true;
     }
     
-    // Check if limit exceeded
     if (data.count >= maxAttempts) {
       return false;
     }
     
-    // Increment count
     localStorage.setItem(storageKey, JSON.stringify({ count: data.count + 1, resetAt: data.resetAt }));
     return true;
   } catch (error) {
-    // If localStorage fails, allow the request (graceful degradation)
     console.warn('Rate limit check failed:', error);
     return true;
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

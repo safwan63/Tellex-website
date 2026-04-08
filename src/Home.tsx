@@ -224,7 +224,7 @@ function HowTellexWorksSection() {
             <div 
               className="relative w-full cursor-pointer group" 
               style={{ maxWidth: 380 }}
-              onClick={() => window.location.href = `https://tellexsystem.netlify.app`}
+              onClick={() => window.location.href = `/flow?type=mystery`}
             >
               {/* Ground shadow */}
               <div
@@ -304,7 +304,7 @@ function HowTellexWorksSection() {
                   }}
                 >
                   <a
-                    href={`https://tellexsystem.netlify.app`}
+                    href={active === 'mystery' ? "/flow?type=mystery" : "/flow?type=vibe"}
                     className="flex items-center justify-center gap-2 w-full py-4 rounded-xl font-bold transition-all duration-300 group"
                     style={{
                       background: active === 'mystery' ? '#e1cfbc' : '#2b8011',
@@ -463,7 +463,7 @@ export default function Home() {
             <div className="relative group flex justify-center lg:justify-start order-1 lg:order-none">
               <div 
                 className="relative w-full max-w-[500px] lg:max-w-[550px] transition-transform duration-700 ease-out hover:-translate-y-2 z-20 cursor-pointer"
-                onClick={() => window.location.href = "https://tellexsystem.netlify.app"}
+                onClick={() => window.location.href = "/flow?type=mystery"}
               >
                 <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-[85%] h-[30px] bg-black/40 blur-[20px] rounded-[100%] pointer-events-none -z-10"></div>
                 <img
@@ -513,7 +513,7 @@ export default function Home() {
 
               {/* Glowing CTA */}
               <a
-                href="https://tellexsystem.netlify.app"
+                href="/flow?type=mystery"
                 className="mt-12 inline-flex items-center justify-center gap-3 bg-[#0E462B] text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-[#135d39] transition-all duration-300 transform hover:-translate-y-1 shadow-[0_10px_20px_rgba(14,70,43,0.2)] hover:shadow-[0_15px_30px_rgba(14,70,43,0.3)] group relative overflow-hidden"
               >
                 <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-[150%] skew-x-[-20deg] group-hover:translate-x-[150%] transition-transform duration-700 ease-out"></div>

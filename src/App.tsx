@@ -1,15 +1,25 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Home from './Home';
 import Explore from './Explore';
 import About from './About';
 import Contact from './Contact';
-import Admin from './Admin';
 import Privacy from './Privacy';
 import Terms from './Terms';
 import Shipping from './Shipping';
 import Return from './Return';
 
-function App() {
+// New Pages
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import Dashboard from './pages/Dashboard';
+import Flow from './pages/Flow';
+import MyOrders from './pages/MyOrders';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminOrders from './pages/AdminOrders';
+import PrivateRoute from './components/PrivateRoute';
+
+function LegacyApp() {
   const [currentPage, setCurrentPage] = useState('home');
 
   // 1️⃣ Sync URL → page on load & back/forward
@@ -20,7 +30,6 @@ function App() {
       if (path === '/explore') setCurrentPage('explore');
       else if (path === '/about') setCurrentPage('about');
       else if (path === '/contact') setCurrentPage('contact');
-      else if (path === '/admin') setCurrentPage('admin');
       else if (path === '/privacy-policy') setCurrentPage('privacy');
       else if (path === '/terms-of-service') setCurrentPage('terms');
       else if (path === '/shipping-policy') setCurrentPage('shipping');
@@ -51,7 +60,6 @@ function App() {
         '/explore',
         '/about',
         '/contact',
-        '/admin',
         '/privacy-policy',
         '/terms-of-service',
         '/shipping-policy',
@@ -66,7 +74,6 @@ function App() {
       if (path === '/explore') setCurrentPage('explore');
       else if (path === '/about') setCurrentPage('about');
       else if (path === '/contact') setCurrentPage('contact');
-      else if (path === '/admin') setCurrentPage('admin');
       else if (path === '/privacy-policy') setCurrentPage('privacy');
       else if (path === '/terms-of-service') setCurrentPage('terms');
       else if (path === '/shipping-policy') setCurrentPage('shipping');
@@ -89,7 +96,6 @@ function App() {
       {currentPage === 'explore' && <Explore />}
       {currentPage === 'about' && <About />}
       {currentPage === 'contact' && <Contact />}
-      {currentPage === 'admin' && <Admin />}
       {currentPage === 'privacy' && <Privacy />}
       {currentPage === 'terms' && <Terms />}
       {currentPage === 'shipping' && <Shipping />}
@@ -98,4 +104,29 @@ function App() {
   );
 }
 
+function App() {
+  return (
+    <Router>
+      <Routes>
+        {/* Authentication Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        
+        {/* Protected Dashboard Routes */}
+        <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        <Route path="/flow" element={<PrivateRoute><Flow /></PrivateRoute>} />
+        <Route path="/my-orders" element={<PrivateRoute><MyOrders /></PrivateRoute>} />
+        
+        {/* Admin Routes */}
+        <Route path="/admin" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
+        <Route path="/admin/orders" element={<PrivateRoute><AdminOrders /></PrivateRoute>} />
+        
+        {/* Catch-all for existing state-based pages */}
+        <Route path="*" element={<LegacyApp />} />
+      </Routes>
+    </Router>
+  );
+}
+
 export default App;
+

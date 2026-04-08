@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Send, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import emailjs from '@emailjs/browser';
-import { supabase } from '../lib/supabase';
 import { validateContactForm, sanitizeInput, checkRateLimit } from '../lib/security';
 
 export default function ContactForm() {
@@ -47,40 +46,10 @@ export default function ContactForm() {
       message: sanitizeInput(formData.message.trim()),
     };
 
-    let dbSuccess = false;
     let emailSuccess = false;
-    let dbError: any = null;
     let emailError: any = null;
 
     try {
-      // Store in database first (if Supabase is configured)
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      if (supabaseUrl) {
-        try {
-          const { error: dbErr } = await supabase
-            .from('contact_submissions')
-            .insert([
-              {
-                name: sanitizedData.name,
-                email: sanitizedData.email,
-                subject: sanitizedData.subject,
-                message: sanitizedData.message,
-                created_at: new Date().toISOString(),
-              },
-            ]);
-
-          if (dbErr) {
-            dbError = dbErr;
-            console.error('Database error:', dbErr);
-          } else {
-            dbSuccess = true;
-          }
-        } catch (dbErr) {
-          dbError = dbErr;
-          console.error('Database storage failed:', dbErr);
-        }
-      }
-
       // Send email notification using EmailJS
       const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
       const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
@@ -110,8 +79,8 @@ export default function ContactForm() {
         console.warn('EmailJS is not configured. Missing environment variables.');
       }
 
-      // If at least one method succeeded, show success
-      if (dbSuccess || emailSuccess) {
+      // If email succeeded, show success
+      if (emailSuccess) {
         setSubmitStatus('success');
         // Reset form
         setFormData({
@@ -121,13 +90,13 @@ export default function ContactForm() {
           message: '',
         });
       } else {
-        // Both methods failed or not configured
+        // Email failed or not configured
         const errors: string[] = [];
         
-        if (!supabaseUrl && (!serviceId || !templateId || !publicKey)) {
+        if (!serviceId || !templateId || !publicKey) {
           // In development mode, log the form data to console as a fallback
           if (import.meta.env.DEV) {
-            console.log('📧 Contact Form Submission (Development Mode - No Email/Database configured):', {
+            console.log('📧 Contact Form Submission (Development Mode - No Email configured):', {
               name: sanitizedData.name,
               email: sanitizedData.email,
               subject: sanitizedData.subject,
@@ -138,12 +107,10 @@ export default function ContactForm() {
           }
           
           errors.push(
-            'Neither database nor email is configured. ' +
-            'Please set up EmailJS (quickest - see QUICK_SETUP_EMAILJS.md) or Supabase (see SUPABASE_SETUP.md). ' +
+            'Email service is not configured. ' +
+            'Please set up EmailJS (quickest - see QUICK_SETUP_EMAILJS.md). ' +
             'In development mode, form data has been logged to the console.'
           );
-        } else if (dbError) {
-          errors.push(`Database error: ${dbError.message || 'Failed to save to database'}`);
         } else if (emailError) {
           errors.push(`Email error: ${emailError.text || emailError.message || 'Failed to send email'}`);
         } else {
@@ -265,7 +232,6 @@ export default function ContactForm() {
                 <p className="text-xs font-medium mb-1">Quick Setup Options:</p>
                 <ul className="text-xs space-y-1 list-disc list-inside">
                   <li>EmailJS (5 min): See <code className="bg-red-100 px-1 rounded">QUICK_SETUP_EMAILJS.md</code></li>
-                  <li>Supabase (10 min): See <code className="bg-red-100 px-1 rounded">SUPABASE_SETUP.md</code></li>
                 </ul>
                 <p className="text-xs mt-2 text-red-700">
                   💡 Tip: EmailJS is the fastest option to get started!

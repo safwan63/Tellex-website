@@ -1,10 +1,5 @@
 /**
  * Simple authentication utilities for Admin page
- * 
- * For production, consider using:
- * - Supabase Auth (recommended for this project)
- * - JWT tokens
- * - OAuth providers
  */
 
 const ADMIN_PASSWORD_KEY = 'admin_auth_token';
@@ -13,15 +8,8 @@ const ADMIN_PASSWORD_KEY = 'admin_auth_token';
  * Sets admin authentication token
  */
 export function setAdminAuth(password: string): void {
-  // In production, this should hash the password and compare with server
-  // For now, we use a simple approach with localStorage
-  // Note: This is not secure for production - use proper authentication
-  
-  // Generate a simple token (in production, use secure token from server)
   const token = btoa(`${password}_${Date.now()}`);
   sessionStorage.setItem(ADMIN_PASSWORD_KEY, token);
-  
-  // Also store timestamp for session expiry
   sessionStorage.setItem('admin_auth_time', Date.now().toString());
 }
 
@@ -36,7 +24,6 @@ export function isAdminAuthenticated(): boolean {
     return false;
   }
   
-  // Check if session is expired (24 hours)
   const sessionDuration = 24 * 60 * 60 * 1000; // 24 hours
   const timeElapsed = Date.now() - parseInt(authTime, 10);
   
@@ -58,7 +45,6 @@ export function clearAdminAuth(): void {
 
 /**
  * Gets the admin password from environment variable
- * Falls back to a default if not set (for development)
  */
 export function getAdminPassword(): string {
   const envPassword = import.meta.env.VITE_ADMIN_PASSWORD;
@@ -66,27 +52,9 @@ export function getAdminPassword(): string {
     return envPassword;
   }
   
-  // Default password for development (should be changed in production)
   if (import.meta.env.DEV) {
-    return 'admin123'; // CHANGE THIS IN PRODUCTION
+    return 'admin123';
   }
   
-  // In production without password set, require environment variable
   throw new Error('Admin password not configured. Set VITE_ADMIN_PASSWORD environment variable.');
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

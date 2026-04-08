@@ -60,7 +60,7 @@ export default function HeroSection() {
 
             {/* Primary CTA */}
             <a
-              href="https://tellexsystem.netlify.app"
+              href="/flow?type=mystery"
               className="group inline-flex items-center justify-center gap-3 bg-[#2b8011] text-white px-[28px] py-[16px] rounded-[14px] font-semibold text-lg transition-all duration-300 ease-out hover:-translate-y-[2px] hover:scale-[1.03] shadow-[0_10px_25px_rgba(0,0,0,0.25)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.3)] w-full sm:w-auto"
             >
               Try Mystery Pick
@@ -81,9 +81,10 @@ export default function HeroSection() {
 
               {/* Path 1: Vibe Pick - Centered & Enlarged */}
               <a
-                href="https://tellexsystem.netlify.app"
+                href="/flow?type=vibe"
                 className="group relative h-[160px] sm:h-[180px] w-full max-w-xl rounded-[24px] overflow-hidden block shadow-2xl transition-all duration-500 hover:scale-[1.02]"
               >
+
                 {/* Background Image */}
                 <img
                   src={vibePickImg}
