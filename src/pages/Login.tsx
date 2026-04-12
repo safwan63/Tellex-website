@@ -13,33 +13,6 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Handle iOS redirect result on page load
-  useEffect(() => {
-    const handleRedirectResult = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        if (result?.user) {
-          const user = result.user;
-          const userDocRef = doc(db, 'users', user.uid);
-          const userDocSnap = await getDoc(userDocRef);
-          if (!userDocSnap.exists()) {
-            await setDoc(userDocRef, {
-              name: user.displayName || 'Unknown',
-              email: user.email,
-              photoURL: user.photoURL || '',
-              uid: user.uid,
-              createdAt: new Date().toISOString()
-            });
-          }
-          navigate('/dashboard');
-        }
-      } catch (err: any) {
-        console.error('Redirect result error:', err);
-      }
-    };
-    handleRedirectResult();
-  }, [navigate]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -65,13 +38,11 @@ export default function Login() {
 
       let result;
       try {
-        // Try popup first (Primary method)
+        // Strict popup authentication
         result = await signInWithPopup(auth, provider);
       } catch (err: any) {
-        // Fallback for iOS/Popup blocked
         if (err.code === 'auth/popup-blocked') {
-          await signInWithRedirect(auth, provider);
-          return;
+          throw new Error('Please allow pop-ups for this site to sign in with Google.');
         }
         throw err;
       }
