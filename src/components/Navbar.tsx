@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Menu, X, LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import UserAvatar from './UserAvatar';
 
 export default function Navbar() {
   const { user, isAdmin } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -125,6 +127,10 @@ export default function Navbar() {
               ) : (
                 <a
                   href="/login"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate('/login');
+                  }}
                   className="ml-4 inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white text-[#0E462B] font-bold hover:bg-[#e1cfbc] transition-all duration-300"
                 >
                   <LogIn size={18} />
@@ -198,16 +204,17 @@ export default function Navbar() {
               <div className="py-3 border-t border-white/10 mt-2">
                 <p className="text-[#e1cfbc] text-sm mb-3 px-3">Signed in as {user.email}</p>
                 <div className="flex gap-4 px-3 flex-wrap">
-                  <a href="/dashboard" className="text-white hover:text-[#e1cfbc] text-sm font-medium">Dashboard</a>
-                  <a href="/my-orders" className="text-white hover:text-[#e1cfbc] text-sm font-medium">My Orders</a>
+                  <a href="/dashboard" onClick={(e) => { e.preventDefault(); navigate('/dashboard'); setIsOpen(false); }} className="text-white hover:text-[#e1cfbc] text-sm font-medium">Dashboard</a>
+                  <a href="/my-orders" onClick={(e) => { e.preventDefault(); navigate('/my-orders'); setIsOpen(false); }} className="text-white hover:text-[#e1cfbc] text-sm font-medium">My Orders</a>
                   {isAdmin && (
-                    <a href="/admin" className="text-amber-400 hover:text-amber-300 text-sm font-medium">Admin Panel</a>
+                    <a href="/admin" onClick={(e) => { e.preventDefault(); navigate('/admin'); setIsOpen(false); }} className="text-amber-400 hover:text-amber-300 text-sm font-medium">Admin Panel</a>
                   )}
                 </div>
               </div>
             ) : (
               <a
                 href="/login"
+                onClick={(e) => { e.preventDefault(); navigate('/login'); setIsOpen(false); }}
                 className="block py-3 mt-4 text-center rounded-xl bg-white text-[#0E462B] font-bold"
               >
                 Login to Dashboard
