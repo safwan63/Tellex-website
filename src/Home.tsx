@@ -345,10 +345,10 @@ export default function Home() {
         <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(#FFFFFF 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
-          <div className="flex flex-col items-center sm:flex-row sm:justify-between sm:items-end mb-12 sm:mb-16">
-            <div className="text-center sm:text-left max-w-2xl">
+          <div className="flex flex-col items-center mb-6 sm:mb-8">
+            <div className="text-center max-w-2xl">
               <h2
-                className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight"
+                className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 leading-tight"
                 style={{ fontFamily: "'Playfair Display', serif" }}
               >
                 Stories of <span className="text-[#e1cfbc] italic">Surprise</span>
@@ -356,30 +356,6 @@ export default function Home() {
               <p className="text-[17px] sm:text-[19px] text-white/80 leading-relaxed font-light">
                 Discover the joy of receiving a mystery pick curated just for you.
               </p>
-            </div>
-
-            {/* Custom Navigation */}
-            <div className="hidden sm:flex gap-4 mt-6 sm:mt-0">
-              <button
-                onClick={() => {
-                  const scroller = document.getElementById('testimonial-scroll');
-                  if (scroller) scroller.scrollBy({ left: -320, behavior: 'smooth' });
-                }}
-                className="w-14 h-14 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all duration-300 border border-white/10 group shadow-lg backdrop-blur-md"
-                aria-label="Previous testimonial"
-              >
-                <ChevronLeft className="w-6 h-6 text-white group-hover:-translate-x-1 transition-transform duration-300 ease-out" />
-              </button>
-              <button
-                onClick={() => {
-                  const scroller = document.getElementById('testimonial-scroll');
-                  if (scroller) scroller.scrollBy({ left: 320, behavior: 'smooth' });
-                }}
-                className="w-14 h-14 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all duration-300 border border-white/10 group shadow-lg backdrop-blur-md"
-                aria-label="Next testimonial"
-              >
-                <ChevronRight className="w-6 h-6 text-white group-hover:translate-x-1 transition-transform duration-300 ease-out" />
-              </button>
             </div>
           </div>
 
@@ -390,66 +366,96 @@ export default function Home() {
             }
           `}} />
 
-          {/* Testimonial Cards */}
-          <div
-            id="testimonial-scroll"
-            className="flex flex-col md:flex-row justify-center items-center gap-8 lg:gap-12 pb-12 pt-4 w-full"
-          >
-            {[
-              {
-                name: "Shahma",
-                text: "Opening this box felt magical. The book was a perfect match for my mood, couldn't put it down.",
-                img: CL1
-              },
-              {
-                name: "Tanya",
-                text: "Never knew a mystery book could be exactly what I needed. Everything feels incredibly premium.",
-                img: CL2
-              }
-            ].map((t, idx) => (
-              <div
-                key={idx}
-                className="flex-none w-[340px] sm:w-[400px] lg:w-[460px] bg-white rounded-3xl shadow-[0_8px_25px_rgba(0,0,0,0.06)] flex flex-col group transition-all duration-500 ease-out hover:-translate-y-2 hover:shadow-[0_15px_35px_rgba(0,0,0,0.1)] cursor-pointer relative overflow-hidden"
+          {/* Testimonial Section with Centered Side Arrows */}
+          <div className="relative group/reel px-2 sm:px-6">
+            <div className="flex items-center justify-center gap-2 sm:gap-6 lg:gap-10">
+              
+              {/* Left Arrow Button - Visible on all devices */}
+              <button
+                onClick={() => {
+                  const scroller = document.getElementById('testimonial-scroll');
+                  if (scroller) scroller.scrollBy({ left: -300, behavior: 'smooth' });
+                }}
+                className="flex w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center transition-all duration-300 border border-white/20 group/btn shadow-xl backdrop-blur-md flex-shrink-0 z-30"
+                aria-label="Previous testimonial"
               >
-                {/* Image at top (fully covering top area but contained to avoid cropping) */}
-                <div className="w-full h-[400px] sm:h-[480px] lg:h-[550px] overflow-hidden relative bg-[#0E462B]/5 flex items-center justify-center p-4">
-                  <div className="absolute inset-0 bg-[#0E462B]/5 z-10 transition-colors duration-500 ease-out group-hover:bg-transparent pointer-events-none"></div>
-                  <img
-                    src={t.img}
-                    alt={`Customer ${t.name}`}
-                    className="w-full h-full object-contain transition-transform duration-700 ease-out group-hover:scale-[1.03]"
-                  />
-                </div>
+                <ChevronLeft className="w-5 h-5 sm:w-8 sm:h-8 text-white group-hover/btn:-translate-x-1 transition-transform duration-300 ease-out" />
+              </button>
 
-                {/* Content inside the card */}
-                <div className="p-6 sm:p-7 flex flex-col items-center text-center flex-grow bg-white">
-                  {/* Star Rating */}
-                  <div className="flex items-center gap-1 mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-[18px] h-[18px] text-[#2b8011] fill-current" />
-                    ))}
+              {/* Scrollable Cards Reel - Centered */}
+              <div
+                id="testimonial-scroll"
+                className="flex flex-row overflow-x-auto scrollbar-hide gap-4 sm:gap-8 lg:gap-12 pb-10 pt-6 w-full max-w-5xl snap-x snap-mandatory justify-start sm:justify-center px-2 sm:px-4"
+              >
+                {[
+                  {
+                    name: "Shahma",
+                    text: "Opening this box felt magical. The book was a perfect match for my mood, couldn't put it down.",
+                    img: CL1
+                  },
+                  {
+                    name: "Tanya",
+                    text: "Never knew a mystery book could be exactly what I needed. Everything feels incredibly premium.",
+                    img: CL2
+                  }
+                ].map((t, idx) => (
+                  <div
+                    key={idx}
+                    className="flex-none w-full sm:w-[320px] lg:w-[360px] bg-white rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.12)] flex flex-col group transition-all duration-500 ease-out hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.15)] cursor-pointer relative overflow-hidden snap-center"
+                  >
+                    {/* Image Area - Further reduced for Mobile & Desktop */}
+                    <div className="w-full h-[260px] sm:h-[320px] lg:h-[360px] overflow-hidden relative bg-[#0E462B]/5 flex items-center justify-center p-4 sm:p-6 text-center">
+                      <div className="absolute inset-0 bg-[#0E462B]/5 z-10 transition-colors duration-500 ease-out group-hover:bg-transparent pointer-events-none"></div>
+                      <img
+                        src={t.img}
+                        alt={`Customer ${t.name}`}
+                        className="w-full h-full object-contain transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+                      />
+                    </div>
+
+                    {/* Content Area - Optimized for smaller size */}
+                    <div className="p-4 sm:p-6 flex flex-col items-center text-center flex-grow bg-white">
+                      {/* Star Rating */}
+                      <div className="flex items-center gap-1 mb-3 sm:mb-4">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#2b8011] fill-current" />
+                        ))}
+                      </div>
+
+                      {/* Testimonial Text */}
+                      <p className="text-[#0E462B] text-[13px] sm:text-[15px] leading-relaxed font-medium mb-4 sm:mb-6 flex-grow italic">
+                        "{t.text}"
+                      </p>
+
+                      {/* User Name */}
+                      <div className="mt-auto">
+                        <span className="text-[10px] sm:text-[12px] font-bold text-[#0E462B]/80 tracking-[0.2em] uppercase">
+                          {t.name}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-
-                  {/* Testimonial Text */}
-                  <p className="text-[#0E462B] text-[15px] sm:text-[16px] leading-relaxed font-medium mb-6 flex-grow">
-                    "{t.text}"
-                  </p>
-
-                  {/* User Name */}
-                  <div className="mt-auto">
-                    <span className="text-[13px] font-bold text-[#0E462B]/70 tracking-widest uppercase">
-                      {t.name}
-                    </span>
-                  </div>
-                </div>
+                ))}
               </div>
-            ))}
+
+              {/* Right Arrow Button - Visible on all devices */}
+              <button
+                onClick={() => {
+                  const scroller = document.getElementById('testimonial-scroll');
+                  if (scroller) scroller.scrollBy({ left: 300, behavior: 'smooth' });
+                }}
+                className="flex w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center transition-all duration-300 border border-white/20 group/btn shadow-xl backdrop-blur-md flex-shrink-0 z-30"
+                aria-label="Next testimonial"
+              >
+                <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8 text-white group-hover/btn:translate-x-1 transition-transform duration-300 ease-out" />
+              </button>
+            </div>
           </div>
 
-          {/* Mobile Navigation Guidelines */}
-          <div className="flex justify-center mt-2 sm:hidden gap-2">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="w-2 h-2 rounded-full bg-white/20"></div>
+          {/* Pagination Indicators - Visible on Mobile */}
+          <div className="flex justify-center mt-4 gap-2.5 sm:hidden">
+            {[...Array(2)].map((_, i) => (
+              <div key={i} className={`w-2 h-2 rounded-full transition-all duration-300 ${i === 0 ? 'bg-white scale-125' : 'bg-white/30'}`}></div>
             ))}
           </div>
         </div>

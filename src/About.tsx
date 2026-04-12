@@ -17,71 +17,6 @@ export default function About() {
         showCta={false}
       />
 
-      {/* Founders Section */}
-      <section className="pt-8 pb-16 md:pt-12 md:pb-24 bg-[#0E462B] relative overflow-hidden">
-        {/* Soft decorative glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] max-w-4xl h-64 bg-white/5 blur-[120px] pointer-events-none rounded-full"></div>
-        
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-16 sm:mb-20">
-            <h2
-              className="text-3xl sm:text-4xl md:text-[44px] font-bold text-white mb-6"
-              style={{ fontFamily: "'Playfair Display', serif" }}
-            >
-              Meet the Minds Behind Tellex
-            </h2>
-            <div className="w-16 h-1 bg-[#E1CFBC]/40 mx-auto rounded-full"></div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10 lg:gap-12">
-            {[
-              {
-                name: "Mujahir",
-                role: "Founder",
-                img: MujahirImg,
-                imgClass: "object-[center_12%] scale-100"
-              },
-              {
-                name: "Safwan Hashim",
-                role: "Co-founder",
-                img: SafwanImg,
-                imgClass: "object-[center_25%] scale-[1.65] translate-y-4"
-              },
-              {
-                name: "Fazan",
-                role: "Co-founder",
-                img: FazanImg,
-                imgClass: "object-[center_25%] scale-[1.75] translate-y-5"
-              }
-            ].map((founder, idx) => (
-              <div 
-                key={idx}
-                className="group bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-3 sm:p-4 flex flex-col transition-all duration-500 ease-out hover:-translate-y-3 hover:bg-white/10 hover:shadow-[0_20px_40px_rgba(0,0,0,0.3)] hover:border-white/20"
-              >
-                <div className="w-full aspect-[4/3] mb-5 overflow-hidden rounded-2xl relative">
-                  <div className="absolute inset-0 bg-[#0E462B]/10 mix-blend-overlay z-10 group-hover:opacity-0 transition-opacity duration-500 z-20"></div>
-                  <div className="w-full h-full transition-transform duration-700 ease-out group-hover:scale-[1.05]">
-                    <img 
-                      src={founder.img} 
-                      alt={founder.name} 
-                      className={`w-full h-full object-cover ${founder.imgClass}`}
-                    />
-                  </div>
-                </div>
-                <div className="text-center pb-2">
-                  <h3 className="text-lg sm:text-xl font-bold text-white mb-1" style={{ fontFamily: "'Playfair Display', serif" }}>
-                    {founder.name}
-                  </h3>
-                  <p className="text-[#E1CFBC] text-xs sm:text-sm tracking-[0.1em] uppercase font-semibold opacity-90">
-                    {founder.role}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <section className="py-12 sm:py-16 md:py-20 bg-tellex-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="prose prose-lg max-w-none">
@@ -263,6 +198,71 @@ export default function About() {
               alt="QR Code to join our reading community" 
               className="w-48 h-48 sm:w-64 sm:h-64 object-contain rounded-lg bg-white p-3 sm:p-4"
             />
+          </div>
+        </div>
+      </section>
+
+      {/* Founders Section */}
+      <section className="pt-8 pb-16 md:pt-12 md:pb-24 bg-[#0E462B] relative overflow-hidden">
+        {/* Soft decorative glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] max-w-4xl h-64 bg-white/5 blur-[120px] pointer-events-none rounded-full"></div>
+        
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-16 sm:mb-20">
+            <h2
+              className="text-3xl sm:text-4xl md:text-[44px] font-bold text-white mb-6"
+              style={{ fontFamily: "'Playfair Display', serif" }}
+            >
+              Meet the Minds Behind Tellex
+            </h2>
+            <div className="w-16 h-1 bg-[#E1CFBC]/40 mx-auto rounded-full"></div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10 lg:gap-12">
+            {[
+              {
+                name: "Mujahir",
+                role: "Founder",
+                img: MujahirImg,
+                imgClass: "object-[center_12%] scale-100"
+              },
+              {
+                name: "Safwan Hashim",
+                role: "Co-founder",
+                img: SafwanImg,
+                imgClass: "object-[center_25%] scale-[1.65] translate-y-4"
+              },
+              {
+                name: "Fazan",
+                role: "Co-founder",
+                img: FazanImg,
+                imgClass: "object-[center_25%] scale-[1.75] translate-y-5"
+              }
+            ].map((founder, idx) => (
+              <div 
+                key={idx}
+                className="group bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-3 sm:p-4 flex flex-col transition-all duration-500 ease-out hover:-translate-y-3 hover:bg-white/10 hover:shadow-[0_20px_40px_rgba(0,0,0,0.3)] hover:border-white/20"
+              >
+                <div className="w-full aspect-[4/3] mb-5 overflow-hidden rounded-2xl relative">
+                  <div className="absolute inset-0 bg-[#0E462B]/10 mix-blend-overlay z-10 group-hover:opacity-0 transition-opacity duration-500 z-20"></div>
+                  <div className="w-full h-full transition-transform duration-700 ease-out group-hover:scale-[1.05]">
+                    <img 
+                      src={founder.img} 
+                      alt={founder.name} 
+                      className={`w-full h-full object-cover ${founder.imgClass}`}
+                    />
+                  </div>
+                </div>
+                <div className="text-center pb-2">
+                  <h3 className="text-lg sm:text-xl font-bold text-white mb-1" style={{ fontFamily: "'Playfair Display', serif" }}>
+                    {founder.name}
+                  </h3>
+                  <p className="text-[#E1CFBC] text-xs sm:text-sm tracking-[0.1em] uppercase font-semibold opacity-90">
+                    {founder.role}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

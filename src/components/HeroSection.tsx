@@ -33,7 +33,7 @@ export default function HeroSection() {
           {/* Right Side: Content */}
           <div className="order-1 lg:order-2 flex flex-col items-center lg:items-start text-center lg:text-left">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 mb-4 backdrop-blur-md shadow-lg transform transition hover:scale-105">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 mb-2 backdrop-blur-md shadow-lg transform transition hover:scale-105">
               <Gift className="text-white w-4 h-4 drop-shadow-md" />
               <span className="text-white text-[12px] font-bold tracking-widest uppercase drop-shadow-md">Mystery Pick</span>
             </div>
