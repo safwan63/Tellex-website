@@ -38,6 +38,12 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Delivery Banner */}
+        <div className="bg-[#e1cfbc]/30 border border-[#e1cfbc] text-[#0E462B] text-sm sm:text-base font-medium text-center py-3 px-4 rounded-xl mb-12 max-w-4xl mx-auto flex items-center justify-center gap-2 shadow-sm">
+          <span role="img" aria-label="package">📦</span>
+          <span>Currently, delivery is available only in <span className="font-bold border-b border-[#0E462B]">India</span></span>
+        </div>
+
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold text-[#0E462B] mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
             Welcome back.

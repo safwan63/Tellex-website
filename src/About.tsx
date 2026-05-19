@@ -193,9 +193,9 @@ export default function About() {
             Become part of a community that values meaningful reading experiences and emotional connections with stories.
           </p>
           <div className="flex justify-center">
-            <img 
-              src={qrCodeImage} 
-              alt="QR Code to join our reading community" 
+            <img
+              src={qrCodeImage}
+              alt="QR Code to join our reading community"
               className="w-48 h-48 sm:w-64 sm:h-64 object-contain rounded-lg bg-white p-3 sm:p-4"
             />
           </div>
@@ -206,7 +206,7 @@ export default function About() {
       <section className="pt-8 pb-16 md:pt-12 md:pb-24 bg-[#0E462B] relative overflow-hidden">
         {/* Soft decorative glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] max-w-4xl h-64 bg-white/5 blur-[120px] pointer-events-none rounded-full"></div>
-        
+
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-16 sm:mb-20">
             <h2
@@ -239,16 +239,16 @@ export default function About() {
                 imgClass: "object-[center_25%] scale-[1.75] translate-y-5"
               }
             ].map((founder, idx) => (
-              <div 
+              <div
                 key={idx}
                 className="group bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-3 sm:p-4 flex flex-col transition-all duration-500 ease-out hover:-translate-y-3 hover:bg-white/10 hover:shadow-[0_20px_40px_rgba(0,0,0,0.3)] hover:border-white/20"
               >
                 <div className="w-full aspect-[4/3] mb-5 overflow-hidden rounded-2xl relative">
                   <div className="absolute inset-0 bg-[#0E462B]/10 mix-blend-overlay z-10 group-hover:opacity-0 transition-opacity duration-500 z-20"></div>
                   <div className="w-full h-full transition-transform duration-700 ease-out group-hover:scale-[1.05]">
-                    <img 
-                      src={founder.img} 
-                      alt={founder.name} 
+                    <img
+                      src={founder.img}
+                      alt={founder.name}
                       className={`w-full h-full object-cover ${founder.imgClass}`}
                     />
                   </div>

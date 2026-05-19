@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { onAuthStateChanged, User, getRedirectResult } from "firebase/auth";
-import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../firebase";
 
 interface AuthContextType {
@@ -57,7 +57,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           });
           setIsAdmin(isAdminUser);
         } else {
-          setIsAdmin(userDoc.data().isAdmin || false);
+          const isAdminUser = ADMIN_EMAILS.includes(currentUser.email || "");
+          // Safety: If they are in the admin list but the doc doesn't have the flag, update it!
+          if (isAdminUser && !userDoc.data().isAdmin) {
+            await updateDoc(userRef, { isAdmin: true });
+            setIsAdmin(true);
+          } else {
+            setIsAdmin(userDoc.data().isAdmin || false);
+          }
         }
       } else {
         setUser(null);

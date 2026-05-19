@@ -19,7 +19,8 @@ import {
   MapPin, 
   Tag, 
   Clock, 
-  CreditCard 
+  CreditCard,
+  MessageCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -27,12 +28,15 @@ interface Order {
   id: string;
   userId: string;
   type: 'mystery' | 'vibe';
-  status: 'confirmed' | 'cancelled' | 'delivered';
+  status: 'confirmed' | 'cancelled' | 'delivered' | 'pending';
   mood: string;
   address: string;
   price: number;
   createdAt: Timestamp;
   delivery?: any;
+  bookQuantity?: string;
+  answers?: any;
+  budget?: number;
 }
 
 export default function MyOrders() {
@@ -40,7 +44,18 @@ export default function MyOrders() {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editData, setEditData] = useState({
+    firstName: "",
+    lastName: "",
+    address: "",
+    city: "",
+    pincode: "",
+    whatsapp: ""
+  });
 
   // Auth Guard
   useEffect(() => {
@@ -78,9 +93,12 @@ export default function MyOrders() {
         setLoading(false);
       } catch (err) {
         console.error("Mapping error:", err);
+        setError("We couldn't format your orders correctly. This might be a temporary permission issue.");
+        setLoading(false);
       }
     }, (error) => {
       console.error("Firestore snapshot error:", error);
+      setError("Failed to connect to our database. This usually means a connection issue or a missing permission (white screen catch).");
       setLoading(false);
     });
 
@@ -102,6 +120,51 @@ export default function MyOrders() {
         console.error("Error cancelling order:", err);
         alert("Failed to cancel order. Please try again.");
       }
+    }
+  };
+
+  const startEditing = (order: Order) => {
+    setEditData({
+      firstName: order.delivery?.firstName || "",
+      lastName: order.delivery?.lastName || "",
+      address: order.delivery?.address || order.address.split(',')[1]?.trim() || order.address,
+      city: order.delivery?.city || "",
+      pincode: order.delivery?.pincode || "",
+      whatsapp: order.delivery?.whatsapp || ""
+    });
+    setIsEditing(true);
+  };
+
+  const handleUpdateAddress = async () => {
+    if (!selectedOrder) return;
+    setIsSaving(true);
+    try {
+      const orderRef = doc(db, "orders", selectedOrder.id);
+      const fullAddress = `${editData.firstName} ${editData.lastName}, ${editData.address}, ${editData.city} - ${editData.pincode}`;
+      
+      const updatePayload = {
+        delivery: {
+          ...selectedOrder.delivery,
+          ...editData
+        },
+        address: fullAddress
+      };
+
+      await updateDoc(orderRef, updatePayload);
+      setSelectedOrder({
+        ...selectedOrder,
+        ...updatePayload
+      });
+      setIsEditing(false);
+    } catch (err: any) {
+      console.error("Error updating address:", err);
+      // More descriptive error for debugging (removed in production usually, but helpful here)
+      const errorMsg = err.code === 'permission-denied' 
+        ? "Access Denied: Please update your Firestore Security Rules." 
+        : "Failed to update address. Please try again.";
+      alert(errorMsg);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -132,7 +195,54 @@ export default function MyOrders() {
     return `${formatPart(start)} - ${formatPart(end)}`;
   };
 
-  if (authLoading || (loading && !orders.length)) {
+  const getBookQuantity = (order: Order) => {
+    const qty = order.answers?.bookQuantity || order.bookQuantity || order.delivery?.bookQuantity;
+    if (!qty) return 1;
+    const parsed = parseInt(String(qty).replace(/\D/g, ''));
+    return isNaN(parsed) || parsed < 1 ? 1 : parsed;
+  };
+
+  const formatDateTime = (timestamp: Timestamp | undefined) => {
+    if (!timestamp) return "N/A";
+    const date = timestamp.toDate();
+    return date.toLocaleString('en-US', { 
+      day: 'numeric', 
+      month: 'short', 
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const VALID_BUDGETS = [349, 449, 689, 1299];
+
+  const snapToValidBudget = (value: number) => {
+    return VALID_BUDGETS.reduce((prev, curr) =>
+      Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev
+    );
+  };
+
+  const getBudgetPerBook = (order: Order) => {
+    // Priority 1: explicitly saved top-level budget field (new orders)
+    if (order.budget && order.budget > 0) return order.budget;
+    // Priority 2: budget saved inside answers (new orders)
+    if (order.answers?.budget && order.answers.budget > 0) return order.answers.budget;
+    // Priority 3: for legacy orders, snap stored price/qty to nearest valid option
+    // (prevents garbage values like ₹116 from division of wrong legacy prices)
+    if (order.price && order.price > 0) {
+      const qty = getBookQuantity(order);
+      const derived = Math.round(order.price / qty);
+      return snapToValidBudget(derived);
+    }
+    return 349; // absolute last resort
+  };
+
+  const getDisplayPrice = (order: Order) => {
+    const qty = getBookQuantity(order);
+    return getBudgetPerBook(order) * qty;
+  };
+  if (authLoading || (loading && !orders.length && !error)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FDFCF7]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0E462B]"></div>
@@ -156,7 +266,21 @@ export default function MyOrders() {
       </header>
 
       <main className="max-w-xl mx-auto px-4 py-6">
-        {orders.length === 0 ? (
+        {error ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-4">
+              <svg className="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Something went wrong</h2>
+            <p className="text-gray-500 mb-8 max-w-sm mx-auto">{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-8 py-3 bg-[#0E462B] text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"
+            >
+              Reload Page
+            </button>
+          </div>
+        ) : orders.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
               <Package className="w-10 h-10 text-gray-400" />
@@ -199,10 +323,14 @@ export default function MyOrders() {
                   </div>
 
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 text-sm text-gray-600">
+                    <div className="flex items-center gap-3 text-sm text-gray-600 border-b border-gray-50 pb-3 mb-2">
+                      <Clock className="w-4 h-4" />
+                      <span>Placed on: <span className="font-semibold text-gray-900">{formatDateTime(order.createdAt)}</span></span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm text-gray-600 mt-2">
                       {order.type === 'vibe' ? (
                         <>
-                          <Clock className="w-4 h-4 text-[#3182ce]" />
+                          <Tag className="w-4 h-4 text-[#3182ce]" />
                           <span className="font-semibold text-[#2c5282]">Ready within 24 hrs</span>
                         </>
                       ) : (
@@ -213,13 +341,16 @@ export default function MyOrders() {
                       )}
                     </div>
                     <div className="flex items-center gap-3 text-sm text-gray-600">
-                      <Tag className="w-4 h-4" />
-                      <span className="capitalize">{order.type} Pick</span>
+                      <Package className="w-4 h-4" />
+                      <span className="capitalize">{order.type} Pick • {getBookQuantity(order)} {getBookQuantity(order) === 1 ? 'Book' : 'Books'}</span>
                     </div>
                   </div>
 
                   <div className="mt-5 flex items-center justify-between pt-4 border-t border-gray-50">
-                    <span className="text-lg font-bold text-[#0E462B]">₹{order.price}</span>
+                    <div className="flex flex-col">
+                      <span className="text-lg font-bold text-[#0E462B]">₹{getDisplayPrice(order)}</span>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">₹{getBudgetPerBook(order)} each</span>
+                    </div>
                     {order.status === 'confirmed' && (
                       <button
                         onClick={(e) => handleCancelOrder(e, order.id)}
@@ -244,7 +375,7 @@ export default function MyOrders() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setSelectedOrder(null)}
+              onClick={() => { setSelectedOrder(null); setIsEditing(false); }}
               className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
             />
             <motion.div
@@ -265,7 +396,7 @@ export default function MyOrders() {
                     <p className="text-sm font-mono text-gray-500 tracking-tight">#{selectedOrder.id.toUpperCase()}</p>
                   </div>
                   <button 
-                    onClick={() => setSelectedOrder(null)}
+                    onClick={() => { setSelectedOrder(null); setIsEditing(false); }}
                     className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
                   >
                     <X className="w-5 h-5 text-gray-600" />
@@ -279,6 +410,18 @@ export default function MyOrders() {
                       <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Pick Type</p>
                       <p className="font-bold text-[#0E462B]">
                         {selectedOrder.type === 'mystery' ? '🎁 Mystery Pick' : '✨ Vibe Pick'}
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-2xl">
+                      <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Quantity</p>
+                      <p className="font-bold text-[#0E462B]">
+                        {getBookQuantity(selectedOrder)} {getBookQuantity(selectedOrder) === 1 ? 'Book' : 'Books'}
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-2xl">
+                      <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Price/Book</p>
+                      <p className="font-bold text-[#0E462B]">
+                        ₹{getBudgetPerBook(selectedOrder)}
                       </p>
                     </div>
                     <div className="p-4 rounded-2xl" style={{ backgroundColor: getStatusStyles(selectedOrder.status).bg }}>
@@ -298,7 +441,7 @@ export default function MyOrders() {
                       <div>
                         <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">Ordered On</p>
                         <p className="text-gray-900 font-medium">
-                          {selectedOrder.createdAt?.toDate().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          {formatDateTime(selectedOrder.createdAt)}
                         </p>
                       </div>
                     </div>
@@ -321,13 +464,96 @@ export default function MyOrders() {
                       <div className="w-10 h-10 bg-[#0E462B]/5 rounded-xl flex items-center justify-center flex-shrink-0">
                         <MapPin className="w-5 h-5 text-[#0E462B]" />
                       </div>
-                      <div>
-                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">Delivery Address</p>
-                        <p className="text-gray-700 text-sm leading-relaxed max-w-[280px]">
-                          {selectedOrder.address}
-                        </p>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-center mb-1">
+                          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">Delivery Address</p>
+                          {!isEditing && selectedOrder.status === 'confirmed' && (
+                            <button 
+                              onClick={() => startEditing(selectedOrder)}
+                              className="text-[11px] font-bold text-[#0E462B] hover:underline"
+                            >
+                              Edit Address
+                            </button>
+                          )}
+                        </div>
+                        
+                        {isEditing ? (
+                          <div className="space-y-3 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                            <div className="grid grid-cols-2 gap-2">
+                              <input 
+                                value={editData.firstName} 
+                                onChange={e => setEditData({...editData, firstName: e.target.value})}
+                                placeholder="First Name" 
+                                className="w-full px-3 py-2 text-sm border rounded-lg focus:ring-1 focus:ring-[#0E462B] outline-none"
+                              />
+                              <input 
+                                value={editData.lastName} 
+                                onChange={e => setEditData({...editData, lastName: e.target.value})}
+                                placeholder="Last Name" 
+                                className="w-full px-3 py-2 text-sm border rounded-lg focus:ring-1 focus:ring-[#0E462B] outline-none"
+                              />
+                            </div>
+                            <textarea 
+                              value={editData.address} 
+                              onChange={e => setEditData({...editData, address: e.target.value})}
+                              placeholder="Full Address" 
+                              className="w-full px-3 py-2 text-sm border rounded-lg focus:ring-1 focus:ring-[#0E462B] outline-none h-16 resize-none"
+                            />
+                            <div className="grid grid-cols-2 gap-2">
+                              <input 
+                                value={editData.city} 
+                                onChange={e => setEditData({...editData, city: e.target.value})}
+                                placeholder="City" 
+                                className="w-full px-3 py-2 text-sm border rounded-lg focus:ring-1 focus:ring-[#0E462B] outline-none"
+                              />
+                              <input 
+                                value={editData.pincode} 
+                                onChange={e => setEditData({...editData, pincode: e.target.value})}
+                                placeholder="Pincode" 
+                                maxLength={6}
+                                className="w-full px-3 py-2 text-sm border rounded-lg focus:ring-1 focus:ring-[#0E462B] outline-none"
+                              />
+                            </div>
+                            <input 
+                              value={editData.whatsapp} 
+                              onChange={e => setEditData({...editData, whatsapp: e.target.value})}
+                              placeholder="WhatsApp Number" 
+                              maxLength={10}
+                              className="w-full px-3 py-2 text-sm border rounded-lg focus:ring-1 focus:ring-[#0E462B] outline-none"
+                            />
+                            <div className="flex gap-2 pt-2">
+                              <button 
+                                onClick={() => setIsEditing(false)}
+                                className="flex-1 py-2 text-xs font-bold text-gray-500 border border-gray-200 rounded-lg"
+                              >
+                                Cancel
+                              </button>
+                              <button 
+                                onClick={handleUpdateAddress}
+                                disabled={isSaving}
+                                className="flex-1 py-2 text-xs font-bold text-white bg-[#0E462B] rounded-lg disabled:opacity-50"
+                              >
+                                {isSaving ? "Saving..." : "Save Address"}
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-gray-700 text-sm leading-relaxed max-w-[280px]">
+                            {selectedOrder.address}
+                          </p>
+                        )}
                       </div>
                     </div>
+                  </div>
+
+                  {/* WhatsApp Notice */}
+                  <div className="flex items-start sm:items-center gap-3 p-4 bg-[#25D366]/10 rounded-2xl border border-[#25D366]/20">
+                    <div className="w-10 h-10 bg-[#25D366]/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <MessageCircle className="w-5 h-5 text-[#128C7E]" />
+                    </div>
+                    <p className="text-[13px] sm:text-sm font-medium text-[#128C7E] leading-snug mt-1 sm:mt-0">
+                      Your tracking ID and all updates will be shared via <span className="font-bold">WhatsApp</span>.
+                    </p>
                   </div>
 
                   {/* Price & Payment */}
@@ -341,7 +567,7 @@ export default function MyOrders() {
                     </div>
                     <div className="text-right">
                       <p className="text-[10px] font-bold uppercase opacity-60">Total Amount</p>
-                      <p className="text-2xl font-bold text-white">₹{selectedOrder.price}</p>
+                      <p className="text-2xl font-bold text-white">₹{getDisplayPrice(selectedOrder)}</p>
                     </div>
                   </div>
 

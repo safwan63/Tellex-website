@@ -1,23 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Home from './Home';
-import Explore from './Explore';
-import About from './About';
-import Contact from './Contact';
-import Privacy from './Privacy';
-import Terms from './Terms';
-import Shipping from './Shipping';
-import Return from './Return';
-
-// New Pages
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import Dashboard from './pages/Dashboard';
-import Flow from './pages/Flow';
-import MyOrders from './pages/MyOrders';
-import AdminDashboard from './pages/AdminDashboard';
-import AdminOrders from './pages/AdminOrders';
 import PrivateRoute from './components/PrivateRoute';
+import ErrorBoundary from './components/ErrorBoundary';
+
+// Lazy load all pages to drastically reduce the initial bundle size
+const Home = lazy(() => import('./Home'));
+const Explore = lazy(() => import('./Explore'));
+const About = lazy(() => import('./About'));
+const Contact = lazy(() => import('./Contact'));
+const Privacy = lazy(() => import('./Privacy'));
+const Terms = lazy(() => import('./Terms'));
+const Shipping = lazy(() => import('./Shipping'));
+const Return = lazy(() => import('./Return'));
+
+const Login = lazy(() => import('./pages/Login'));
+const Signup = lazy(() => import('./pages/Signup'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Flow = lazy(() => import('./pages/Flow'));
+const MyOrders = lazy(() => import('./pages/MyOrders'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const AdminOrders = lazy(() => import('./pages/AdminOrders'));
+
+// Reusable animated fallback UI while chunks download
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-[#FDFCF7]">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0E462B]"></div>
+  </div>
+);
 
 function LegacyApp() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -91,7 +100,7 @@ function LegacyApp() {
   }, [currentPage]);
 
   return (
-    <>
+    <Suspense fallback={<PageLoader />}>
       {currentPage === 'home' && <Home />}
       {currentPage === 'explore' && <Explore />}
       {currentPage === 'about' && <About />}
@@ -100,30 +109,34 @@ function LegacyApp() {
       {currentPage === 'terms' && <Terms />}
       {currentPage === 'shipping' && <Shipping />}
       {currentPage === 'return' && <Return />}
-    </>
+    </Suspense>
   );
 }
 
 function App() {
   return (
     <Router>
-      <Routes>
-        {/* Authentication Routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        
-        {/* Protected Dashboard Routes */}
-        <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-        <Route path="/flow" element={<PrivateRoute><Flow /></PrivateRoute>} />
-        <Route path="/my-orders" element={<PrivateRoute><MyOrders /></PrivateRoute>} />
-        
-        {/* Admin Routes */}
-        <Route path="/admin" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
-        <Route path="/admin/orders" element={<PrivateRoute><AdminOrders /></PrivateRoute>} />
-        
-        {/* Catch-all for existing state-based pages */}
-        <Route path="*" element={<LegacyApp />} />
-      </Routes>
+      <Suspense fallback={<PageLoader />}>
+        <ErrorBoundary>
+          <Routes>
+            {/* Authentication Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            
+            {/* Protected Dashboard Routes */}
+            <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+            <Route path="/flow" element={<PrivateRoute><Flow /></PrivateRoute>} />
+            <Route path="/my-orders" element={<PrivateRoute><MyOrders /></PrivateRoute>} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
+            <Route path="/admin/orders" element={<PrivateRoute><AdminOrders /></PrivateRoute>} />
+            
+            {/* Catch-all for existing state-based pages */}
+            <Route path="*" element={<LegacyApp />} />
+          </Routes>
+        </ErrorBoundary>
+      </Suspense>
     </Router>
   );
 }

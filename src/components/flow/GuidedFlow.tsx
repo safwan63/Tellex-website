@@ -7,7 +7,7 @@ import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { db } from "../../firebase";
 import { useAuth } from "../../context/AuthContext";
-
+import { Sparkles } from "lucide-react";
 
 // --- Validations ---
 const emotionSchema = z.object({
@@ -15,6 +15,7 @@ const emotionSchema = z.object({
   emotionOther: z.string().optional(),
   lifeSituation: z.string().min(1, "Please select your life situation"),
   lifeSituationOther: z.string().optional(),
+  decisionStyle: z.string().min(1, "Please select your decision style"),
 });
 
 const intentSchema = z.object({
@@ -22,6 +23,7 @@ const intentSchema = z.object({
   reasonsOther: z.string().optional(),
   wants: z.array(z.string()).min(1, "Please select at least one want").max(3, "You can select up to 3 wants"),
   wantsOther: z.string().optional(),
+  currentNeed: z.string().min(1, "Please select your current need"),
 });
 
 const preferenceSchema = z.object({
@@ -45,13 +47,18 @@ const deliverySchema = z.object({
   whatsapp: z.string().regex(/^[0-9]{10}$/, "Must be a valid 10 digit number"),
 });
 
-// Full schema to infer types but we validate step by step
+const quantitySchema = z.object({
+  bookQuantity: z.string().min(1, "Please select the quantity of books"),
+});
+
+// Full schema
 const fullSchema = z.object({
   ...emotionSchema.shape,
   ...intentSchema.shape,
   ...preferenceSchema.shape,
   ...historySchema.shape,
   ...budgetSchema.shape,
+  ...quantitySchema.shape,
   ...deliverySchema.shape,
 });
 
@@ -70,34 +77,135 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
+  const [insight, setInsight] = useState<{ scores: any, top2: string[], response: string, preview: string } | null>(null);
 
   const { register, handleSubmit, trigger, watch, setValue, setError, clearErrors, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(fullSchema),
     defaultValues: {
       reasons: [],
-      wants: []
+      wants: [],
+      bookQuantity: ""
     }
   });
 
   const formValues = watch();
+
+  const generateRiasecInsight = (data: FormData) => {
+    let scores: Record<string, number> = { R:0, I:0, A:0, S:0, E:0, C:0 };
+
+    // Decision Style (Heavy weight)
+    if (data.decisionStyle === "Think deeply and analyze") scores.I += 4;
+    if (data.decisionStyle === "Feel through it") scores.A += 4;
+    if (data.decisionStyle === "Take action quickly") scores.E += 4;
+    if (data.decisionStyle === "Talk to someone") scores.S += 4;
+
+    // Current Need
+    if (data.currentNeed === "Clarity") scores.I += 3;
+    if (data.currentNeed === "Healing") scores.A += 3;
+    if (data.currentNeed === "Motivation") scores.E += 3;
+    if (data.currentNeed === "Peace") scores.S += 3;
+
+    // Emotion
+    const em = data.emotion || "";
+    if (em.includes("Anxious") || em.includes("Frustrated")) scores.I += 2; 
+    if (em.includes("Low / Sad") || em.includes("Empty")) scores.A += 2;
+    if (em.includes("Hopeful") || em.includes("Happy")) scores.E += 2;
+    if (em.includes("Peaceful") || em.includes("Relaxed")) scores.S += 2;
+
+    // Life Situation
+    const ls = data.lifeSituation || "";
+    if (ls.includes("stuck") || ls.includes("confused")) scores.I += 2;
+    if (ls.includes("Heartbreak") || ls.includes("loss")) scores.A += 2;
+    if (ls.includes("personal growth") || ls.includes("goal")) scores.E += 2;
+    if (ls.includes("mental calm") || ls.includes("beginning")) scores.S += 2;
+
+    // Intents
+    data.reasons.forEach(r => {
+      if (r.includes("reflect") || r.includes("learn")) scores.I += 1;
+      if (r.includes("explore")) scores.E += 1;
+      if (r.includes("relax") || r.includes("unexpected")) scores.S += 1;
+      if (r.includes("healing") || r.includes("inspiration")) scores.A += 1;
+    });
+
+    data.wants.forEach(w => {
+      if (w.includes("mindset") || w.includes("Perspective")) scores.I += 2;
+      if (w.includes("Motivation")) scores.E += 2;
+      if (w.includes("Peace") || w.includes("Comfort")) scores.S += 2;
+      if (w.includes("Connection") || w.includes("healing") || w.includes("Creativity")) scores.A += 2;
+    });
+
+    const sorted = Object.entries(scores).sort((a,b) => b[1] - a[1]);
+    const top2 = [sorted[0][0], sorted[1][0]];
+    const primaryTrait = top2[0];
+    const secondaryTrait = top2[1];
+
+    console.log("=== RIASEC ENGINE DATA ===");
+    console.log("Input:", data);
+    console.log("Computed Scores:", scores);
+    console.log("Top 2 Traits:", top2);
+    
+    const emotionText = (data.emotion === "✍️ Other" ? data.emotionOther : data.emotion)?.replace(/[^a-zA-Z\s]/g, '').trim().toLowerCase() || "the way you feel";
+    const sitText = (data.lifeSituation === "✍️ Other" ? data.lifeSituationOther : data.lifeSituation)?.replace(/[^a-zA-Z\s]/g, '').trim().toLowerCase() || "this moment";
+
+    let preview = "";
+    let fullExplanation = "";
+    
+    if (primaryTrait === "I") {
+      preview = `We see that you're navigating ${sitText} and dealing with feeling ${emotionText}. Because you naturally want to analyze and understand things deeply, you aren't just looking for an escape—you're seeking cognitive clarity and a genuine shift in perspective...`;
+      fullExplanation = `Your responses indicate a highly analytical mindset right now. We are selecting a book that respects your intellect, challenges your current framework, and offers the structural clarity you crave to move forward.`;
+    } else if (primaryTrait === "A") {
+      preview = `Sitting with feeling ${emotionText} through ${sitText} takes an emotional toll. It's clear that right now, you need more than just information or a generic story—you're searching for deep emotional resonance and a safe space to process how you feel...`;
+      fullExplanation = `You are leading with your heart and seeking meaning. We are curating a profoundly moving read that honors your emotional depth, validates your experience, and helps you find beauty or healing in this chapter of your life.`;
+    } else if (primaryTrait === "E") {
+      preview = `You're currently experiencing ${sitText} and the feeling of being ${emotionText}. But beneath that, you have a strong drive for momentum. You're not looking to sit still—you're actively seeking the spark and motivation to push forward and conquer what's next...`;
+      fullExplanation = `Your answers reveal an enterprising, action-oriented energy. We will select a highly dynamic, thought-provoking book designed to ignite your ambition, break your blockages, and push you into your next era of growth.`;
+    } else {
+      preview = `Moving through ${sitText} while feeling ${emotionText} can be exhausting. What stands out most is your need for psychological safety and grounding. Right now, you are looking for comfort, human connection, and a sense of profound peace...`;
+      fullExplanation = `We sense a deep desire for balance and comfort in your flow mapping. We are carefully choosing a warm, restorative book that wraps around you like a quiet sanctuary, giving you the space to breathe and reconnect.`;
+    }
+
+    const flavorMap: Record<string, string> = {
+      I: "with profound intellectual depth.",
+      A: "with raw, honest humanity.",
+      E: "with actionable, powerful momentum.",
+      S: "with a warm, comforting embrace."
+    };
+    
+    const closing = `Something meaningful is on its way, crafted safely for you ${flavorMap[secondaryTrait] || "to experience soon."}`;
+
+    const response = `${preview.replace('...', '.')}\n\n${fullExplanation}\n\n${closing}`;
+
+    console.log("Generated PREVIEW:", preview);
+    console.log("Generated RESPONSE:", response);
+
+    return { scores, top2, response, preview };
+  };
 
   const handleNext = async () => {
     let isValid = false;
     switch (currentSection) {
       case 1: isValid = await trigger(["budget"]); break;
       case 2: 
-        isValid = await trigger(["emotion", "emotionOther", "lifeSituation", "lifeSituationOther"]); 
+        isValid = await trigger(["emotion", "emotionOther", "lifeSituation", "lifeSituationOther", "decisionStyle"]); 
         if (formValues.emotion === "✍️ Other" && (!formValues.emotionOther || formValues.emotionOther.trim() === "")) { setError("emotionOther", {type: "manual", message: "Please specify your emotion"}); isValid = false; }
         if (formValues.lifeSituation === "✍️ Other" && (!formValues.lifeSituationOther || formValues.lifeSituationOther.trim() === "")) { setError("lifeSituationOther", {type: "manual", message: "Please specify your situation"}); isValid = false; }
         break;
       case 3: 
-        isValid = await trigger(["reasons", "reasonsOther", "wants", "wantsOther"]); 
+        isValid = await trigger(["reasons", "reasonsOther", "wants", "wantsOther", "currentNeed"]); 
         if ((formValues.reasons || []).includes("Other") && (!formValues.reasonsOther || formValues.reasonsOther.trim() === "")) { setError("reasonsOther", {type: "manual", message: "Please specify your reason"}); isValid = false; }
         if ((formValues.wants || []).includes("Other") && (!formValues.wantsOther || formValues.wantsOther.trim() === "")) { setError("wantsOther", {type: "manual", message: "Please specify what you want"}); isValid = false; }
         break;
-      case 4: isValid = await trigger(["bookType"]); break;
-      case 5: isValid = await trigger(["readBooks"]); break;
-      case 6: isValid = await trigger(["firstName", "lastName", "address", "city", "pincode", "whatsapp"]); break;
+      case 4: isValid = await trigger(["bookType", "readBooks"]); break;
+      case 5: 
+        isValid = await trigger(["bookQuantity"]); 
+        if (isValid) {
+          const generated = generateRiasecInsight(formValues);
+          setInsight(generated);
+        }
+        break;
+      case 6: 
+        isValid = true;
+        break;
       default: isValid = true;
     }
     
@@ -112,26 +220,34 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
   };
 
   const onSubmit = async (data: FormData) => {
-    // Already validated before summary, but doing final submit
-    if (isSubmitting) return;
+    if (isSubmitting || !insight) return;
     setIsSubmitting(true);
     
     try {
+
       await addDoc(collection(db, "orders"), {
         userId: user?.uid || "anonymous",
-        type: type, // "mystery" or "vibe"
+        type: type, 
         status: "confirmed",
         mood: `${data.emotion === "✍️ Other" ? data.emotionOther : data.emotion} | ${data.lifeSituation === "✍️ Other" ? data.lifeSituationOther : data.lifeSituation}`,
         mode: "guided",
+        budget: parseInt(data.budget),
         answers: {
           emotion: data.emotion === "✍️ Other" ? data.emotionOther : data.emotion,
           lifeSituation: data.lifeSituation === "✍️ Other" ? data.lifeSituationOther : data.lifeSituation,
+          decisionStyle: data.decisionStyle,
+          currentNeed: data.currentNeed,
           reasons: data.reasons.map(r => r === "Other" ? data.reasonsOther : r),
           wants: data.wants.map(w => w === "Other" ? data.wantsOther : w),
           bookType: data.bookType,
           readBooks: data.readBooks,
+          bookQuantity: data.bookQuantity,
+          budget: parseInt(data.budget),
           language: language
         },
+        riasecScores: insight.scores,
+        topTypes: insight.top2,
+        response: insight.response,
         delivery: {
           firstName: data.firstName,
           lastName: data.lastName,
@@ -141,14 +257,15 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
           whatsapp: data.whatsapp
         },
         address: `${data.firstName} ${data.lastName}, ${data.address}, ${data.city} - ${data.pincode}`,
-        price: parseInt(data.budget),
+        price: parseInt(data.budget) * parseInt(data.bookQuantity || "1"),
         createdAt: serverTimestamp()
       });
       
       setOrderComplete(true);
     } catch (err) {
       console.error("Error saving order: ", err);
-      // Implement error handling toast in production
+      // Surface error properly rather than failing silently on UI
+      alert("Failed to confirm order. Please ensure you have permission to write to the database and try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -177,48 +294,45 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
   };
 
   // Lists for mapping
+  const budgets = ["349", "449", "689", "1299"];
   const emotions = ["😊 Happy", "😌 Peaceful", "😟 Anxious", "😔 Low / Sad", "😤 Frustrated", "😍 Hopeful", "⬜ Empty", "✍️ Other"];
   const lifeSituations = ["✨ New beginnings", "💔 Heartbreak or loss", "🌀 Feeling stuck or confused", "📈 Seeking personal growth", "🧘 Need mental calm", "🎯 Working toward a goal", "✍️ Other"];
+  const decisionStyles = ["Think deeply and analyze", "Feel through it", "Take action quickly", "Talk to someone"];
+  
   const readingReasons = ["To relax", "To find inspiration", "To learn", "To reflect", "To explore", "To experience something unexpected", "Other"];
   const readingWants = ["New mindset", "Peace and calm", "Motivation", "Connection", "Perspective shift", "Creativity", "Comfort and healing", "Something good to read", "Other"];
+  const currentNeeds = ["Clarity", "Healing", "Motivation", "Peace"];
+  
   const bookTypes = ["Self-help / Mindset", "Fiction / Story", "Romance", "Mystery / Thriller"];
-  const budgets = ["289", "349", "449", "689", "1299"];
 
   if (orderComplete) {
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center space-y-8 mt-10 max-w-lg mx-auto">
-        <div className="space-y-4">
-          <h2 className="text-4xl font-extrabold text-[#0E462B]" style={{ fontFamily: "'Playfair Display', serif" }}>
-            {type === "mystery" ? "Order confirmed ✅" : "Your vibe has been received ✨"}
-          </h2>
-          <div className="h-1 w-20 bg-[#0E462B]/20 mx-auto rounded-full" />
-        </div>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center space-y-8 mt-4 max-w-lg mx-auto">
         
+        <div className="text-left space-y-4 bg-[#0E462B] text-[#e1cfbc] p-8 rounded-3xl shadow-xl">
+          <SparklesIcon />
+          {insight?.response.split('\n\n').map((para, idx) => (
+             <p key={idx} className="text-lg leading-relaxed">{para}</p>
+          ))}
+        </div>
+
         <div className="text-left space-y-4 bg-white p-6 rounded-2xl border border-[#0E462B]/5 shadow-sm">
           {type === "mystery" ? (
             <>
-              <p className="flex items-start gap-3 text-gray-700">
-                <span className="text-[#0E462B] mt-1">•</span>
-                <span>We’re now finding a book that truly matches your current vibe.</span>
-              </p>
               <p className="flex items-start gap-3 text-gray-700">
                 <span className="text-[#0E462B] mt-1">•</span>
                 <span>Your mystery book is being carefully selected… get ready for a surprise 📦✨</span>
               </p>
               <p className="flex items-start gap-3 text-gray-700">
                 <span className="text-[#0E462B] mt-1">•</span>
-                <span>You’ll receive tracking details once it’s shipped via WhatsApp.</span>
+                <span>Book remains a mystery until delivery.</span>
               </p>
             </>
           ) : (
             <>
               <p className="flex items-start gap-3 text-gray-700">
                 <span className="text-[#0E462B] mt-1">•</span>
-                <span>We’re choosing a book that truly understands your current mood.</span>
-              </p>
-              <p className="flex items-start gap-3 text-gray-700">
-                <span className="text-[#0E462B] mt-1">•</span>
-                <span>Prepared within 24 hrs , you’ll get a WhatsApp notification once done</span>
+                <span>✨ Book will be revealed to you via WhatsApp within 24 hours.</span>
               </p>
             </>
           )}
@@ -229,7 +343,7 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
             onClick={() => navigate('/my-orders')}
             className="w-full sm:w-auto px-8 py-3 bg-[#0E462B] text-[#e1cfbc] font-bold rounded-xl hover:bg-[#0E462B]/90 transition-all shadow-sm"
           >
-            My Orders
+            Track My Order
           </button>
           <button 
             onClick={() => navigate('/dashboard')}
@@ -241,13 +355,6 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
       </motion.div>
     );
   }
-
-  const getDeliveryRange = () => {
-    const d1 = new Date(); d1.setDate(d1.getDate() + 4);
-    const d2 = new Date(); d2.setDate(d2.getDate() + 7);
-    const options: any = { day: 'numeric', month: 'short' };
-    return `${d1.toLocaleDateString('en-GB', options)} - ${d2.toLocaleDateString('en-GB', options)}`;
-  };
 
   return (
     <div className="w-full">
@@ -265,7 +372,7 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
         {currentSection === 1 && (
           <motion.div key="sec-1" variants={slideVariants} initial="initial" animate="enter" exit="exit" className="space-y-10">
             <div>
-              <h2 className="text-2xl font-bold text-[#0E462B] mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>Select your budget (₹)</h2>
+              <h2 className="text-2xl font-bold text-[#0E462B] mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>Select your budget per book (₹)</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 {budgets.map(b => (
                   <button key={b} onClick={() => setValue("budget", b)} type="button"
@@ -283,7 +390,7 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
           </motion.div>
         )}
 
-        {/* SECTION 2 - Emotion & Life Situation */}
+        {/* SECTION 2 - Emotion, Situation, Decision Style */}
         {currentSection === 2 && (
           <motion.div key="sec-2" variants={slideVariants} initial="initial" animate="enter" exit="exit" className="space-y-10">
             <div>
@@ -321,6 +428,18 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
               )}
               {errors.lifeSituation && <p className="text-red-500 text-sm mt-2">{errors.lifeSituation.message}</p>}
             </div>
+
+            <div>
+              <h2 className="text-xl font-bold text-[#0E462B] mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>When facing a problem, what feels more natural to you?</h2>
+              <div className="flex flex-col gap-3 border-l-4 border-[#0E462B]/20 pl-4 py-2">
+                {decisionStyles.map(ds => (
+                  <button key={ds} onClick={() => { setValue("decisionStyle", ds); clearErrors("decisionStyle"); }} type="button"
+                    className={`px-4 py-3 text-left rounded-xl border-2 text-sm font-medium transition-colors ${formValues.decisionStyle === ds ? "border-[#0E462B] bg-[#0E462B]/5 text-[#0E462B]" : "border-[#E5E5E0] hover:border-[#0E462B]/30 bg-white"}`}
+                  >{ds}</button>
+                ))}
+              </div>
+              {errors.decisionStyle && <p className="text-red-500 text-sm mt-2">{errors.decisionStyle.message}</p>}
+            </div>
             
             <div className="flex gap-4 pt-4">
               <button onClick={handleBack} className="px-6 py-3 font-medium text-gray-500 border border-gray-300 rounded-lg hover:bg-gray-50">Back</button>
@@ -329,7 +448,7 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
           </motion.div>
         )}
 
-        {/* SECTION 3 - Reading Intent */}
+        {/* SECTION 3 - Reading Intent & Current Need */}
         {currentSection === 3 && (
           <motion.div key="sec-3" variants={slideVariants} initial="initial" animate="enter" exit="exit" className="space-y-10">
             <div>
@@ -368,6 +487,18 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
               {errors.wants && <p className="text-red-500 text-sm mt-2">{errors.wants.message}</p>}
             </div>
 
+            <div>
+              <h2 className="text-xl font-bold text-[#0E462B] mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>What do you feel you need the most right now?</h2>
+              <div className="flex flex-col gap-3 border-l-4 border-[#e1cfbc] pl-4 py-2">
+                {currentNeeds.map(cn => (
+                  <button key={cn} onClick={() => { setValue("currentNeed", cn); clearErrors("currentNeed"); }} type="button"
+                    className={`px-4 py-3 text-left rounded-xl border-2 text-sm font-medium transition-colors ${formValues.currentNeed === cn ? "border-[#0E462B] bg-[#0E462B]/5 text-[#0E462B]" : "border-[#E5E5E0] hover:border-[#0E462B]/30 bg-white"}`}
+                  >{cn}</button>
+                ))}
+              </div>
+              {errors.currentNeed && <p className="text-red-500 text-sm mt-2">{errors.currentNeed.message}</p>}
+            </div>
+
             <div className="flex gap-4 pt-4">
               <button onClick={handleBack} className="px-6 py-3 font-medium text-gray-500 border border-gray-300 rounded-lg hover:bg-gray-50">Back</button>
               <button onClick={handleNext} className="flex-1 px-6 py-3 font-medium text-[#e1cfbc] bg-[#0E462B] rounded-lg hover:bg-[#0E462B]/90">Continue</button>
@@ -375,7 +506,7 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
           </motion.div>
         )}
 
-        {/* SECTION 4 - Preferences */}
+        {/* SECTION 4 - Preferences & Reading History */}
         {currentSection === 4 && (
           <motion.div key="sec-4" variants={slideVariants} initial="initial" animate="enter" exit="exit" className="space-y-10">
             <div>
@@ -390,16 +521,6 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
               {errors.bookType && <p className="text-red-500 text-sm mt-2">{errors.bookType.message}</p>}
             </div>
 
-            <div className="flex gap-4 pt-4">
-              <button onClick={handleBack} className="px-6 py-3 font-medium text-gray-500 border border-gray-300 rounded-lg hover:bg-gray-50">Back</button>
-              <button onClick={handleNext} className="flex-1 px-6 py-3 font-medium text-[#e1cfbc] bg-[#0E462B] rounded-lg hover:bg-[#0E462B]/90">Continue</button>
-            </div>
-          </motion.div>
-        )}
-
-        {/* SECTION 5 - Reading History */}
-        {currentSection === 5 && (
-          <motion.div key="sec-5" variants={slideVariants} initial="initial" animate="enter" exit="exit" className="space-y-10">
             <div>
               <h2 className="text-2xl font-bold text-[#0E462B] mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>List some books you've already read and enjoyed.</h2>
               <p className="text-gray-500 mb-4">This helps us avoid sending you something you already have.</p>
@@ -418,10 +539,86 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
           </motion.div>
         )}
 
-        {/* SECTION 6 - Delivery */}
+        {/* SECTION 5 - Book Quantity */}
+        {currentSection === 5 && (
+          <motion.div key="sec-5" variants={slideVariants} initial="initial" animate="enter" exit="exit" className="space-y-10">
+            <div>
+              <h2 className="text-2xl font-bold text-[#0E462B] mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>Quantity of books?</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {["1", "2", "3"].map(q => (
+                  <button key={q} onClick={() => setValue("bookQuantity", q)} type="button"
+                    className={`p-6 text-center rounded-xl border-2 font-bold text-xl transition-all duration-200 ${formValues.bookQuantity === q ? "border-[#0E462B] bg-[#0E462B] text-[#e1cfbc] shadow-md scale-105" : "border-[#E5E5E0] text-gray-700 hover:border-[#0E462B]/30 bg-white"}`}
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+              {errors.bookQuantity && <p className="text-red-500 text-sm mt-3">{errors.bookQuantity.message}</p>}
+            </div>
+
+            <div className="flex gap-4 pt-4">
+              <button onClick={handleBack} className="px-6 py-3 font-medium text-gray-500 border border-gray-300 rounded-lg hover:bg-gray-50">Back</button>
+              <button onClick={handleNext} className="flex-1 px-6 py-3 font-medium text-[#e1cfbc] bg-[#0E462B] rounded-lg hover:bg-[#0E462B]/90">Continue</button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* SECTION 6 - Summary */}
         {currentSection === 6 && (
           <motion.div key="sec-6" variants={slideVariants} initial="initial" animate="enter" exit="exit" className="space-y-8">
-            <h2 className="text-2xl font-bold text-[#0E462B]" style={{ fontFamily: "'Playfair Display', serif" }}>Confirm your order</h2>
+            <div className="flex justify-between items-center border-b border-[#E5E5E0] pb-4">
+              <h2 className="text-2xl font-bold text-[#0E462B]" style={{ fontFamily: "'Playfair Display', serif" }}>Summary</h2>
+              <button onClick={() => setCurrentSection(1)} className="text-sm font-medium text-[#0E462B] hover:underline">Edit Selection</button>
+            </div>
+
+            {insight && (
+              <div className="bg-[#0E462B]/5 border-l-4 border-[#0E462B] p-6 rounded-r-2xl mb-2 space-y-4">
+                <h3 className="text-sm font-bold text-[#0E462B] tracking-widest uppercase flex items-center gap-2">
+                  <Sparkles size={16} /> Here's what we understood about you...
+                </h3>
+                <p className="text-gray-800 text-lg leading-relaxed italic">
+                  {insight.preview}
+                </p>
+                <div className="text-sm font-bold text-[#0E462B]/60 flex items-center gap-2 border-t border-[#0E462B]/10 pt-3">
+                  ✨ Enter your delivery details next to reveal our full curation intent 
+                </div>
+              </div>
+            )}
+            
+            <div className="bg-white p-6 rounded-2xl border border-[#E5E5E0] space-y-4 text-sm">
+              <div className="flex justify-between border-b pb-2"><span className="text-gray-500">Pick Type</span><span className="font-medium text-right capitalize">{type} Pick</span></div>
+              <div className="flex justify-between border-b pb-2"><span className="text-gray-500">Emotion</span><span className="font-medium text-right">{formValues.emotion === "✍️ Other" ? formValues.emotionOther : formValues.emotion}</span></div>
+              <div className="flex justify-between border-b pb-2"><span className="text-gray-500">Situation</span><span className="font-medium text-right">{formValues.lifeSituation === "✍️ Other" ? formValues.lifeSituationOther : formValues.lifeSituation}</span></div>
+              <div className="flex justify-between border-b pb-2"><span className="text-gray-500">Decision Style</span><span className="font-medium text-right">{formValues.decisionStyle}</span></div>
+              <div className="flex justify-between border-b pb-2"><span className="text-gray-500">Goal</span><span className="font-medium text-right">{formValues.currentNeed}</span></div>
+              <div className="flex justify-between border-b pb-2"><span className="text-gray-500">Book Type</span><span className="font-medium text-right">{formValues.bookType}</span></div>
+              <div className="flex justify-between border-b pb-2"><span className="text-gray-500">Quantity</span><span className="font-medium text-right">{formValues.bookQuantity} {parseInt(formValues.bookQuantity) === 1 ? 'Book' : 'Books'}</span></div>
+              <div className="flex justify-between border-b pb-2"><span className="text-gray-500">Language</span><span className="font-medium text-right">{language}</span></div>
+              <div className="flex justify-between border-b pb-2"><span className="text-gray-500">Budget per book</span><span className="font-medium text-right">₹{formValues.budget}</span></div>
+              <div className="flex justify-between pb-2"><span className="text-gray-500">Total Price</span><span className="font-bold text-[#0E462B] text-right text-lg">₹{(parseInt(formValues.budget || "0") * parseInt(formValues.bookQuantity || "1")).toString()}</span></div>
+            </div>
+
+            {type === "mystery" && (
+              <div className="bg-[#e1cfbc]/30 p-6 rounded-xl text-center border border-[#e1cfbc]">
+                <p className="font-medium text-[#0E462B]/80 text-sm">Book name will stay a mystery until it reaches you 🎁</p>
+              </div>
+            )}
+
+            <div className="pt-2">
+              <div className="flex gap-4">
+                <button onClick={handleBack} disabled={isSubmitting} className="px-6 py-4 font-medium text-gray-500 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50">Back</button>
+                <button onClick={handleNext} disabled={isSubmitting} className="flex-1 px-6 py-4 font-bold text-[#e1cfbc] bg-[#0E462B] rounded-lg hover:bg-[#0E462B]/90 shadow-lg disabled:opacity-50 transition-all uppercase tracking-wide">
+                  Proceed to Delivery Details
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* SECTION 7 - Delivery Form */}
+        {currentSection === 7 && (
+          <motion.div key="sec-7" variants={slideVariants} initial="initial" animate="enter" exit="exit" className="space-y-8">
+            <h2 className="text-2xl font-bold text-[#0E462B]" style={{ fontFamily: "'Playfair Display', serif" }}>Confirm your Order</h2>
             
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -442,16 +639,17 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
               {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-              <input {...register("city")} className="w-full px-4 py-3 border-2 border-[#E5E5E0] rounded-lg focus:border-[#0E462B] outline-none" placeholder="Mumbai" />
-              {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city.message}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Pincode</label>
-              <input {...register("pincode")} maxLength={6} className="w-full px-4 py-3 border-2 border-[#E5E5E0] rounded-lg focus:border-[#0E462B] outline-none" placeholder="400001" />
-              {errors.pincode && <p className="text-red-500 text-xs mt-1">{errors.pincode.message}</p>}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                <input {...register("city")} className="w-full px-4 py-3 border-2 border-[#E5E5E0] rounded-lg focus:border-[#0E462B] outline-none" placeholder="Mumbai" />
+                {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city.message}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Pincode</label>
+                <input {...register("pincode")} maxLength={6} className="w-full px-4 py-3 border-2 border-[#E5E5E0] rounded-lg focus:border-[#0E462B] outline-none" placeholder="400001" />
+                {errors.pincode && <p className="text-red-500 text-xs mt-1">{errors.pincode.message}</p>}
+              </div>
             </div>
 
             <div>
@@ -460,62 +658,12 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
               {errors.whatsapp && <p className="text-red-500 text-xs mt-1">{errors.whatsapp.message}</p>}
             </div>
 
-            <div className="flex gap-4 pt-4">
-              <button onClick={handleBack} className="px-6 py-3 font-medium text-gray-500 border border-gray-300 rounded-lg hover:bg-gray-50">Back</button>
-              <button 
-                onClick={handleNext} 
-                className="flex-1 px-6 py-3 font-medium text-[#e1cfbc] bg-[#0E462B] rounded-lg hover:bg-[#0E462B]/90"
-              >
-                Review Summary
-              </button>
-            </div>
-          </motion.div>
-        )}
-
-        {/* SECTION 7 - Summary */}
-        {currentSection === 7 && (
-          <motion.div key="sec-7" variants={slideVariants} initial="initial" animate="enter" exit="exit" className="space-y-8">
-            <div className="flex justify-between items-center border-b border-[#E5E5E0] pb-4">
-              <h2 className="text-2xl font-bold text-[#0E462B]" style={{ fontFamily: "'Playfair Display', serif" }}>Summary</h2>
-              <button onClick={() => setCurrentSection(1)} className="text-sm font-medium text-[#0E462B] underline">Edit</button>
-            </div>
-            
-            <div className="bg-white p-6 rounded-2xl border border-[#E5E5E0] space-y-4">
-              <div className="flex justify-between border-b pb-2"><span className="text-gray-500">Pick Type</span><span className="font-medium text-right capitalize">{type} Pick</span></div>
-              <div className="flex justify-between border-b pb-2"><span className="text-gray-500">Book Type</span><span className="font-medium text-right">{formValues.bookType}</span></div>
-              <div className="flex justify-between border-b pb-2"><span className="text-gray-500">Language</span><span className="font-medium text-right">{language}</span></div>
-              <div className="flex justify-between border-b pb-2"><span className="text-gray-500">Budget</span><span className="font-bold text-[#0E462B] text-right">₹{formValues.budget}</span></div>
-              <div className="flex flex-col border-b pb-2">
-                <span className="text-gray-500 mb-1">Delivery</span>
-                <span className="font-medium">
-                  {formValues.firstName} {formValues.lastName}<br/>
-                  {formValues.address}<br/>
-                  {formValues.city} - {formValues.pincode}<br/>
-                  WA: {formValues.whatsapp}
-                </span>
-              </div>
-            </div>
-
-            {type === "mystery" && (
-              <div className="bg-[#e1cfbc]/30 p-6 rounded-xl text-center border border-[#e1cfbc]">
-                <p className="font-bold text-[#0E462B] mb-2">Delivery within {getDeliveryRange()}</p>
-                <p className="font-medium text-[#0E462B]/70 text-sm">Book name will stay a mystery until it reaches you 🎁</p>
-              </div>
-            )}
-
-            {type === "vibe" && (
-              <div className="bg-[#ebf8ff] p-4 rounded-xl text-center border border-[#3182ce]/20 space-y-1">
-                <p className="text-sm font-semibold text-[#2c5282]">Give us up to 24 hours to prepare it for you,</p>
-                <p className="text-xs text-[#2c5282]/80">You’ll be notified once it’s ready via WhatsApp</p>
-              </div>
-            )}
-
             <div className="pt-2">
-              <p className="text-center font-bold text-gray-700 mb-4">Payment: COD (Cash on Delivery) Only</p>
+              <p className="text-center font-bold text-gray-700 mb-4 text-lg">Payment: COD Only</p>
               <div className="flex gap-4">
                 <button onClick={handleBack} disabled={isSubmitting} className="px-6 py-4 font-medium text-gray-500 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50">Back</button>
-                <button onClick={handleSubmit(onSubmit)} disabled={isSubmitting} className="flex-1 px-6 py-4 font-medium text-[#e1cfbc] bg-[#0E462B] rounded-lg hover:bg-[#0E462B]/90 shadow-lg disabled:opacity-50 transition-all uppercase tracking-wide">
-                  {isSubmitting ? "Processing..." : "Confirm Final Order"}
+                <button onClick={handleSubmit(onSubmit)} disabled={isSubmitting} className="flex-1 px-6 py-4 font-bold text-[#e1cfbc] bg-[#0E462B] rounded-lg hover:bg-[#0E462B]/90 shadow-lg disabled:opacity-50 transition-all uppercase tracking-wide">
+                  {isSubmitting ? "Processing Insights..." : "Confirm & Proceed"}
                 </button>
               </div>
             </div>
@@ -523,5 +671,13 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+function SparklesIcon() {
+  return (
+    <svg className="w-10 h-10 mb-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+    </svg>
   );
 }
