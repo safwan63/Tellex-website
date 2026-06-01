@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
@@ -14,6 +14,8 @@ export default function Signup() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectUrl = searchParams.get("redirect") || "/dashboard";
 
   // Handle iOS redirect result on page load
   useEffect(() => {
@@ -33,7 +35,7 @@ export default function Signup() {
               createdAt: new Date().toISOString()
             });
           }
-          navigate('/dashboard');
+          navigate(redirectUrl);
         }
       } catch (err: any) {
         console.error('Redirect result error:', err);
@@ -66,7 +68,7 @@ export default function Signup() {
         createdAt: new Date().toISOString()
       });
 
-      navigate('/dashboard');
+      navigate(redirectUrl);
     } catch (err: any) {
       setError(err.message || 'Signup failed');
     } finally {
@@ -107,7 +109,7 @@ export default function Signup() {
         });
       }
 
-      navigate('/dashboard');
+      navigate(redirectUrl);
     } catch (err: any) {
       console.error("Google Sign-In Error:", err);
       if (err.code !== 'auth/popup-closed-by-user') {

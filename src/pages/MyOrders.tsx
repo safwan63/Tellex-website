@@ -37,6 +37,7 @@ interface Order {
   bookQuantity?: string;
   answers?: any;
   budget?: number;
+  cancellationReason?: string;
 }
 
 export default function MyOrders() {
@@ -56,6 +57,10 @@ export default function MyOrders() {
     pincode: "",
     whatsapp: ""
   });
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
+  const [cancellationReason, setCancellationReason] = useState("");
+  const [isCancelling, setIsCancelling] = useState(false);
 
   // Auth Guard
   useEffect(() => {
@@ -105,21 +110,36 @@ export default function MyOrders() {
     return () => unsubscribe();
   }, [user?.uid]);
 
-  const handleCancelOrder = async (e: React.MouseEvent, orderId: string) => {
+  const handleCancelOrder = (e: React.MouseEvent, orderId: string) => {
     e.stopPropagation();
-    if (window.confirm("Are you sure you want to cancel this order?")) {
-      try {
-        const orderRef = doc(db, "orders", orderId);
-        await updateDoc(orderRef, { status: "cancelled" });
-        
-        // Update local selected state if open
-        if (selectedOrder?.id === orderId) {
-          setSelectedOrder(prev => prev ? { ...prev, status: "cancelled" } : null);
-        }
-      } catch (err) {
-        console.error("Error cancelling order:", err);
-        alert("Failed to cancel order. Please try again.");
+    setCancellingOrderId(orderId);
+    setCancellationReason("");
+    setShowCancelModal(true);
+  };
+
+  const submitCancellation = async () => {
+    if (!cancellingOrderId || !cancellationReason.trim()) return;
+    
+    setIsCancelling(true);
+    try {
+      const orderRef = doc(db, "orders", cancellingOrderId);
+      await updateDoc(orderRef, { 
+        status: "cancelled",
+        cancellationReason: cancellationReason.trim()
+      });
+      
+      // Update local selected state if open
+      if (selectedOrder?.id === cancellingOrderId) {
+        setSelectedOrder(prev => prev ? { ...prev, status: "cancelled", cancellationReason: cancellationReason.trim() } : null);
       }
+      
+      setShowCancelModal(false);
+      setCancellingOrderId(null);
+    } catch (err) {
+      console.error("Error cancelling order:", err);
+      alert("Failed to cancel order. Please try again.");
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -584,6 +604,53 @@ export default function MyOrders() {
               </div>
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      {/* Cancellation Feedback Modal */}
+      <AnimatePresence>
+        {showCancelModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden"
+            >
+              <div className="p-6 pt-8 text-center">
+                <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <X className="w-8 h-8 text-red-500" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Cancel Order?</h3>
+                <p className="text-sm text-gray-500 mb-6">Please tell us why you're cancelling. Your feedback helps us improve.</p>
+                
+                <textarea
+                  value={cancellationReason}
+                  onChange={(e) => setCancellationReason(e.target.value)}
+                  placeholder="Reason for cancellation..."
+                  className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:ring-2 focus:ring-[#0E462B]/20 outline-none h-32 resize-none mb-6"
+                  autoFocus
+                />
+
+                <div className="flex gap-3">
+                  <button
+                    disabled={isCancelling}
+                    onClick={() => setShowCancelModal(false)}
+                    className="flex-1 py-3 px-4 rounded-xl font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 transition-colors"
+                  >
+                    Keep Order
+                  </button>
+                  <button
+                    disabled={isCancelling || !cancellationReason.trim()}
+                    onClick={submitCancellation}
+                    className="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isCancelling ? "Cancelling..." : "Confirm"}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

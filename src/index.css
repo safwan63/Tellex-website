@@ -10,11 +10,31 @@
 /* ===============================
    BASE STYLES
 ================================ */
+@keyframes heroLightboxIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @layer base {
+  :root {
+    --navbar-height: 4rem; /* 64px — matches .site-navbar */
+  }
+
+  @media (min-width: 768px) {
+    :root {
+      --navbar-height: 4.5rem; /* 72px */
+    }
+  }
+
   body {
     font-family: 'Inter', 'Poppins', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    scroll-padding-top: var(--navbar-height);
   }
 
   input,

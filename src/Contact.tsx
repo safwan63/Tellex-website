@@ -27,12 +27,12 @@ export default function Contact() {
 
   const faqs = [
     {
-      question: 'How does the Vibe Pick work?',
-      answer: 'Choose your current mood or vibe, and we show books that match it. You pick what feels right.',
+      question: 'What is a Mystery Pick?',
+      answer: "A Mystery Pick is a hand-wrapped, curated book selected by our team based on a few cryptic clues, genres, or themes. You won't know the exact title or author until you unwrap your package!",
     },
     {
-      question: 'How long does it take to receive a recommendation?',
-      answer: 'Instantly for Vibe Pick and Direct Pick. Mystery Pick recommendations are prepared shortly after you share your details.',
+      question: 'How long does it take to receive my Mystery Pick?',
+      answer: "A:Mystery Pick involves carefully matching the book to your preferences and the reading vibe you're looking for, each selection is thoughtfully curated, processing and delivery typically take 4–7 days.",
     },
     {
       question: "Can I return a book if it doesn't match my vibe?",
@@ -47,8 +47,8 @@ export default function Contact() {
       answer: 'Tellex combines emotions, intelligent systems, and human insight to make book gifting personal not random.',
     },
     {
-      question: 'Can I request specific genres or authors?',
-      answer: 'Yes. With Direct Pick, you can browse and choose exactly what you want.',
+      question: 'What if I get a book I’ve already read?',
+      answer: 'You can specify your previously read books right on the product page before adding the Mystery Pick to your cart, and we will make sure not to include them.',
     },
   ];
 
@@ -89,7 +89,7 @@ export default function Contact() {
               </h2>
 
               <div className="space-y-4 sm:space-y-6 mb-8 sm:mb-12">
-                <div className="flex items-start space-x-3 sm:space-x-4">
+                <div className="flex items-center space-x-3 sm:space-x-4">
                   <div className="p-2 sm:p-3 bg-[#0E462B]/10 rounded-lg">
                     <MapPin className="text-tellex-dark-green" size={20} />
                   </div>
@@ -99,14 +99,14 @@ export default function Contact() {
                   </p>
                 </div>
 
-                <div className="flex items-start space-x-3 sm:space-x-4">
+                <div className="flex items-center space-x-3 sm:space-x-4">
                   <div className="p-2 sm:p-3 bg-[#0E462B]/10 rounded-lg">
                     <Phone className="text-tellex-dark-green" size={20} />
                   </div>
                   <p className="text-tellex-black/70 text-xs sm:text-sm">+91 8590543842</p>
                 </div>
 
-                <div className="flex items-start space-x-3 sm:space-x-4">
+                <div className="flex items-center space-x-3 sm:space-x-4">
                   <div className="p-2 sm:p-3 bg-[#0E462B]/10 rounded-lg">
                     <Mail className="text-tellex-dark-green" size={20} />
                   </div>
@@ -115,11 +115,11 @@ export default function Contact() {
                   </p>
                 </div>
 
-                <div className="flex items-start space-x-3 sm:space-x-4">
+                <div className="flex items-center space-x-3 sm:space-x-4">
                   <div className="p-2 sm:p-3 bg-[#0E462B]/10 rounded-lg">
                     <Clock className="text-tellex-dark-green" size={20} />
                   </div>
-                  <p className="text-tellex-black/70 text-xs sm:text-sm">24/7</p>
+                  <p className="text-tellex-black/70 text-xs sm:text-sm">9am - 6pm (IST)</p>
                 </div>
               </div>
             </div>

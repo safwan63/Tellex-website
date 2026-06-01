@@ -4,132 +4,121 @@ import HeroSection from './components/HeroSection';
 import ImageMarquee from './components/ImageMarquee';
 import {
   Users, Heart, Sparkles, Gift, ChevronLeft, ChevronRight, Star,
-  Moon, Wand2, MessageCircle, Brain, Target, BookOpen
+  Moon, Wand2, type LucideIcon,
 } from 'lucide-react';
 import { useRef, useEffect, useState } from 'react';
 import mysteryBoxImage from './components/Image/boxhold.webp';
-import vibePickImg from './components/Image/vibepick_experience.png';
+import howTellexMysteryImg from './components/Image/tellexboxorg.webp';
 import CL1 from './components/Image/CL1.webp';
 import CL2 from './components/Image/CL2.webp';
 
-/* ─── Step data ─────────────────────────────────────── */
-const MYSTERY_STEPS = [
-  { Icon: Sparkles, label: 'Tell us your vibe' },
-  { Icon: Moon, label: 'We curate in mystery' },
-  { Icon: Gift, label: 'Your book arrives wrapped' },
-  { Icon: Wand2, label: 'Unbox the surprise' },
+/* ─── Journey Strip step data ──────────────────────── */
+const JOURNEY_STEPS = [
+  {
+    num: '01',
+    Icon: Sparkles,
+    title: 'Tell Us Your Vibe',
+    desc: 'Share your mood, genre preferences, and reading style with us.',
+  },
+  {
+    num: '02',
+    Icon: Moon,
+    title: 'We Curate in Mystery',
+    desc: 'Our experts handpick a book that matches your unique vibe perfectly.',
+  },
+  {
+    num: '03',
+    Icon: Gift,
+    title: 'Your Book Arrives Wrapped',
+    desc: 'Beautifully packaged and delivered to your doorstep as a surprise.',
+  },
+  {
+    num: '04',
+    Icon: Wand2,
+    title: 'Unbox the Surprise',
+    desc: 'Unwrap, discover, and fall in love with a story chosen just for you.',
+  },
 ];
 
-const VIBE_STEPS = [
-  { Icon: MessageCircle, label: 'Tell us your vibe' },
-  { Icon: Brain, label: 'We understand your mood' },
-  { Icon: Target, label: 'We curate your perfect match' },
-  { Icon: BookOpen, label: 'Your book is revealed & delivered' },
+const WHY_CHOOSE_TELLEX: { Icon: LucideIcon; title: string; description: string }[] = [
+  {
+    Icon: Users,
+    title: 'Personalised, Not Random',
+    description:
+      'Books are thoughtfully chosen using smart systems and human insight matched to your vibe, never picked blindly.',
+  },
+  {
+    Icon: Heart,
+    title: 'Mystery With Meaning',
+    description:
+      'The surprise goes beyond hiding the title. Every mystery book fits your mood and feels emotionally right.',
+  },
+  {
+    Icon: Sparkles,
+    title: 'More Than a Bookstore',
+    description:
+      'Tellex feels like a friend listening, understanding, and recommending the right book at the right time.',
+  },
+  {
+    Icon: Gift,
+    title: 'Gift',
+    description: 'Crafted with care and personalized through emotion and personality insights, creating a gift that truly resonates with the recipient.',
+  },
 ];
 
-/* ─── Single animated step row ──────────────────────── */
-function TimelineStep({
-  Icon, label, index, visible,
-}: { Icon: React.ElementType; label: string; index: number; visible: boolean }) {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <div
-      className="flex items-start gap-4"
-      style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(18px)',
-        transition: `opacity 0.42s ease ${index * 80}ms, transform 0.42s ease ${index * 80}ms`,
-        cursor: 'default',
-      }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      {/* Icon node + connector */}
-      <div className="flex flex-col items-center flex-shrink-0 pt-[2px]">
-        <div
-          style={{
-            width: 40, height: 40,
-            borderRadius: '50%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: hovered ? 'rgba(225,207,188,0.14)' : 'rgba(225,207,188,0.07)',
-            border: `1px solid ${hovered ? 'rgba(225,207,188,0.35)' : 'rgba(225,207,188,0.18)'}`,
-            transition: 'background 0.25s ease, border-color 0.25s ease',
-          }}
-        >
-          <Icon size={20} strokeWidth={1.4} color={hovered ? '#fff' : '#e1cfbc'} />
-        </div>
-        {index < 3 && (
-          <div
-            style={{
-              width: 1,
-              minHeight: 40,
-              flex: 1,
-              marginTop: 6,
-              background: 'linear-gradient(to bottom, rgba(225,207,188,0.30) 0%, rgba(225,207,188,0.05) 100%)',
-            }}
-          />
-        )}
-      </div>
-
-      {/* Label */}
-      <div className="pb-10">
-        <p
-          style={{
-            fontSize: 16,
-            fontWeight: 300,
-            lineHeight: 1.6,
-            color: hovered ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.85)',
-            transition: 'color 0.25s ease',
-            fontFamily: "'Inter', sans-serif",
-          }}
-        >
-          {label}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Main Section ───────────────────────────────────── */
+/* ─── Main Section — Journey Strip ───────────────────── */
 function HowTellexWorksSection() {
-  /* Default: mystery pre-selected so section is never empty */
-  const [active, setActive] = useState<'mystery' | 'vibe'>('mystery');
-  const [stepsVisible, setStepsVisible] = useState(false);
-  const [contentKey, setContentKey] = useState(0); // forces re-mount on switch
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
 
-  const steps = active === 'mystery' ? MYSTERY_STEPS : VIBE_STEPS;
-
-  /* Step-reveal on mount + after tab switch */
   useEffect(() => {
-    setStepsVisible(false);
-    const t = setTimeout(() => setStepsVisible(true), 150);
-    return () => clearTimeout(t);
-  }, [contentKey]);
-
-  /* Fade out → swap → fade in */
-  const handleSwitch = (pick: 'mystery' | 'vibe') => {
-    if (pick === active) return;
-    setStepsVisible(false);
-    setTimeout(() => {
-      setActive(pick);
-      setContentKey(k => k + 1);
-    }, 220);
-  };
-
-  const vibeBookImg = vibePickImg;
+    const node = sectionRef.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
+      { threshold: 0.15 }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <section
-      className="py-20 lg:py-28 bg-[#0E462B] relative overflow-hidden"
+      ref={sectionRef}
+      className="pt-16 lg:pt-24 pb-20 bg-[#0E462B] relative overflow-visible"
       style={{ fontFamily: "'Inter', sans-serif" }}
     >
-      {/* CSS helpers */}
+      {/* Journey Strip keyframes */}
       <style>{`
-        .tellex-how-img {
-          transition: transform 0.6s ease;
+        @keyframes journeyFadeUp {
+          from { opacity: 0; transform: translateY(24px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
-        .tellex-how-img:hover {
-          transform: scale(1.03);
+        .journey-card {
+          opacity: 0;
+          transform: translateY(24px);
+        }
+        .journey-card.is-visible {
+          animation: journeyFadeUp 0.55s ease forwards;
+        }
+        .journey-card.is-visible:nth-child(1) { animation-delay: 0s; }
+        .journey-card.is-visible:nth-child(2) { animation-delay: 0.1s; }   /* skip arrows via nth-child on cards */
+        .journey-card.is-visible:nth-child(3) { animation-delay: 0.2s; }
+        .journey-card.is-visible:nth-child(4) { animation-delay: 0.3s; }
+        .journey-arrow {
+          opacity: 0;
+        }
+        .journey-arrow.is-visible {
+          animation: journeyFadeUp 0.45s ease forwards;
+          animation-delay: 0.15s;
+        }
+        .journey-banner {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        .journey-banner.is-visible {
+          animation: journeyFadeUp 0.6s ease forwards;
+          animation-delay: 0.4s;
         }
       `}</style>
 
@@ -142,7 +131,7 @@ function HowTellexWorksSection() {
         }}
       />
 
-      {/* Radial ambient glow — prevents flat green-screen feel */}
+      {/* Radial ambient glow */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -150,179 +139,105 @@ function HowTellexWorksSection() {
         }}
       />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 relative z-10">
+      <div className="relative z-10 w-full mx-auto px-4 sm:px-6 lg:px-12" style={{ maxWidth: 1280 }}>
 
-        {/* ── Heading block ── */}
-        <div className="text-center mb-10 lg:mb-14">
+        {/* ── Title — tight spacing, no subtext ── */}
+        <div className="w-full mb-6 lg:mb-8" style={{ textAlign: 'center' }}>
           <h2
-            className="text-4xl sm:text-5xl lg:text-[54px] font-bold text-white leading-tight tracking-tight mb-4"
-            style={{ fontFamily: "'Playfair Display', serif" }}
+            className="text-4xl sm:text-5xl lg:text-[54px] font-bold text-white leading-tight tracking-tight w-full"
+            style={{ fontFamily: "'Playfair Display', serif", textAlign: 'center' }}
           >
             How Tellex Works
           </h2>
-          <p
-            className="text-[16px] sm:text-[17px] font-light mb-10 max-w-xs mx-auto"
-            style={{ color: 'rgba(225,207,188,0.65)' }}
-          >
-            Choose how you want to explore your next read.
-          </p>
-
-          {/* Subtle divider */}
-          <div
-            className="mx-auto mb-8"
-            style={{
-              width: 48,
-              height: 1,
-              background: 'linear-gradient(to right, transparent, rgba(225,207,188,0.35), transparent)',
-            }}
-          />
-
-          {/* Toggle pills */}
-          <div className="flex justify-center gap-3 sm:gap-4">
-            {(['mystery', 'vibe'] as const).map((pick) => {
-              const isActive = active === pick;
-              return (
-                <button
-                  key={pick}
-                  onClick={() => handleSwitch(pick)}
-                  style={{
-                    padding: '12px 28px',
-                    borderRadius: 9999,
-                    fontSize: 14,
-                    fontWeight: 500,
-                    letterSpacing: '0.02em',
-                    border: `1px solid ${isActive ? '#e1cfbc' : 'rgba(255,255,255,0.2)'}`,
-                    background: isActive ? '#e1cfbc' : 'transparent',
-                    color: isActive ? '#0E462B' : 'rgba(255,255,255,0.7)',
-                    opacity: !isActive && active ? 0.45 : 1,
-                    transform: isActive ? 'scale(1.06)' : 'scale(1)',
-                    boxShadow: isActive ? '0 0 24px rgba(225,207,188,0.25), inset 0 1px 0 rgba(255,255,255,0.2)' : 'none',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    minWidth: 130,
-                  }}
-                >
-                  {pick === 'mystery' ? 'Mystery Pick' : 'Vibe Pick'}
-                </button>
-              );
-            })}
-          </div>
         </div>
 
-        {/* ── 2-col body (always visible — no hide/show) ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-
-          {/* LEFT — Image */}
-          <div className="flex justify-center order-1 lg:order-none relative">
-            {/* Ambient glow behind image */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background: 'radial-gradient(ellipse 65% 65% at 50% 50%, rgba(225,207,188,0.08) 0%, transparent 70%)',
-              }}
-            />
-            <div 
-              className="relative w-full cursor-pointer group" 
-              style={{ maxWidth: 380 }}
-              onClick={() => window.location.href = `/flow?type=mystery`}
-            >
-              {/* Ground shadow */}
+        {/* ── 4-Card Journey Strip ── */}
+        <div className="flex flex-col lg:flex-row items-stretch justify-center gap-0 lg:gap-0" style={{ width: '100%' }}>
+          {JOURNEY_STEPS.map((step, idx) => (
+            <div key={idx} className="flex flex-col lg:flex-row items-stretch" style={{ flex: '1 1 0', minWidth: 0 }}>
+              {/* Card */}
               <div
-                className="absolute pointer-events-none"
+                className={`journey-card ${visible ? 'is-visible' : ''} w-full rounded-2xl p-6 lg:p-7 flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1 hover:bg-white/[0.09] cursor-default`}
                 style={{
-                  bottom: -14,
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: '72%',
-                  height: 22,
-                  borderRadius: '100%',
-                  background: 'rgba(0,0,0,0.38)',
-                  filter: 'blur(16px)',
-                }}
-              />
-              <img
-                key={active}
-                src={active === 'mystery' ? mysteryBoxImage : vibeBookImg}
-                alt={active === 'mystery' ? 'Premium mystery book box' : 'Open book reading scene'}
-                className="tellex-how-img w-full rounded-2xl"
-                style={{
-                  height: active === 'mystery' ? 'auto' : 320,
-                  objectFit: active === 'mystery' ? 'contain' : 'cover',
-                  boxShadow: '0 24px 60px rgba(0,0,0,0.50)',
-                  opacity: stepsVisible ? 1 : 0.6,
-                  transition: 'opacity 0.4s ease',
-                }}
-              />
-            </div>
-          </div>
-
-          {/* RIGHT — Timeline panel */}
-          <div className="order-2 lg:order-none">
-            <div
-              style={{
-                borderRadius: 24,
-                padding: '36px 32px',
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.10)',
-                boxShadow: '0 8px 40px rgba(0,0,0,0.25)',
-                backdropFilter: 'blur(4px)',
-              }}
-            >
-              {/* Micro-label */}
-              <p
-                style={{
-                  fontSize: 11,
-                  letterSpacing: '0.26em',
-                  textTransform: 'uppercase',
-                  fontWeight: 600,
-                  color: 'rgba(225,207,188,0.65)',
-                  marginBottom: 28,
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.10)',
+                  minWidth: 0,
+                  flex: '1 1 0',
                 }}
               >
-                {active === 'mystery' ? 'Mystery Pick' : 'Vibe Pick'}
-              </p>
-
-              {/* Steps */}
-              <div key={contentKey}>
-                {steps.map(({ Icon, label }, idx) => (
-                  <TimelineStep
-                    key={idx}
-                    Icon={Icon}
-                    label={label}
-                    index={idx}
-                    visible={stepsVisible}
-                  />
-                ))}
-
-                {/* Launch Button at bottom of timeline */}
-                <div
-                  className="mt-4 pt-4 border-t border-white/10"
+                {/* Step number */}
+                <span
+                  className="block font-bold leading-none mb-3"
                   style={{
-                    opacity: stepsVisible ? 1 : 0,
-                    transform: stepsVisible ? 'translateY(0)' : 'translateY(10px)',
-                    transition: 'all 0.5s ease 0.4s',
+                    fontSize: 56,
+                    color: '#c8963e',
+                    opacity: 0.85,
+                    fontFamily: "'Playfair Display', serif",
                   }}
                 >
-                  <a
-                    href={active === 'mystery' ? "/flow?type=mystery" : "/flow?type=vibe"}
-                    className="flex items-center justify-center gap-2 w-full py-4 rounded-xl font-bold transition-all duration-300 group"
-                    style={{
-                      background: active === 'mystery' ? '#e1cfbc' : '#2b8011',
-                      color: active === 'mystery' ? '#0E462B' : '#FFFFFF',
-                      boxShadow: '0 10px 20px rgba(0,0,0,0.15)',
-                    }}
-                  >
-                    {active === 'mystery' ? 'Launch Mystery Pick' : 'Start Vibe Journey'}
-                    <Sparkles size={18} className="group-hover:rotate-12 transition-transform" />
-                  </a>
-                  <p className="text-center text-[11px] text-white/40 mt-3 tracking-wider uppercase font-medium">
-                    {active === 'mystery' ? 'Requires Secured Login' : 'Secure Experience'}
-                  </p>
+                  {step.num}
+                </span>
+                {/* Icon */}
+                <div
+                  className="flex items-center justify-center mb-4"
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: '50%',
+                    background: 'rgba(200,150,62,0.12)',
+                    border: '1px solid rgba(200,150,62,0.25)',
+                  }}
+                >
+                  <step.Icon size={22} strokeWidth={1.5} color="#c8963e" />
                 </div>
+                {/* Title */}
+                <h3
+                  className="text-white font-bold mb-2"
+                  style={{ fontSize: 18, lineHeight: 1.3 }}
+                >
+                  {step.title}
+                </h3>
+                {/* Description */}
+                <p
+                  className="font-light leading-relaxed"
+                  style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', maxWidth: 220 }}
+                >
+                  {step.desc}
+                </p>
               </div>
-            </div>
-          </div>
 
+              {/* Connecting arrow (not after last card) */}
+              {idx < JOURNEY_STEPS.length - 1 && (
+                <div className={`journey-arrow ${visible ? 'is-visible' : ''} flex items-center justify-center px-2 py-3 lg:py-0 lg:px-3 flex-shrink-0`} style={{ alignSelf: 'center' }}>
+                  {/* Desktop arrow → */}
+                  <span
+                    className="hidden lg:block text-3xl font-light select-none"
+                    style={{ color: '#c8963e', opacity: 0.7 }}
+                  >
+                    →
+                  </span>
+                  {/* Mobile arrow ↓ */}
+                  <span
+                    className="block lg:hidden text-3xl font-light select-none"
+                    style={{ color: '#c8963e', opacity: 0.7 }}
+                  >
+                    ↓
+                  </span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* ── CTA Button ── */}
+        <div className={`journey-banner ${visible ? 'is-visible' : ''} mt-12 lg:mt-16 flex justify-center w-full`}>
+          <a
+            href="/flow?type=mystery"
+            className="flex items-center justify-center gap-3 bg-[#c8963e] text-[#0E462B] px-10 py-4 rounded-full font-bold text-lg hover:bg-[#d6a54f] transition-all duration-300 transform hover:-translate-y-1 shadow-[0_12px_24px_rgba(200,150,62,0.25)] hover:shadow-[0_16px_32px_rgba(200,150,62,0.35)] group"
+          >
+            Try Mystery Pick
+            <Sparkles size={20} className="group-hover:rotate-12 transition-transform" />
+          </a>
         </div>
 
       </div>
@@ -340,7 +255,7 @@ export default function Home() {
       <HeroSection />
 
       {/* Separate Testimonial Section */}
-      <section className="py-20 sm:py-28 relative overflow-hidden" style={{ background: 'radial-gradient(circle at top left, #1e6a42, #0E462B)' }}>
+      <section className="py-12 sm:py-16 relative overflow-hidden" style={{ background: 'radial-gradient(circle at top left, #1e6a42, #0E462B)' }}>
         {/* Subtle background pattern */}
         <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(#FFFFFF 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
 
@@ -367,8 +282,8 @@ export default function Home() {
           `}} />
 
           {/* Testimonial Section with Centered Side Arrows */}
-          <div className="relative group/reel px-2 sm:px-6">
-            <div className="flex items-center justify-center gap-2 sm:gap-6 lg:gap-10">
+          <div className="relative group/reel max-w-6xl mx-auto px-0 sm:px-6">
+            <div className="relative flex items-center justify-center w-full">
               
               {/* Left Arrow Button - Visible on all devices */}
               <button
@@ -376,7 +291,7 @@ export default function Home() {
                   const scroller = document.getElementById('testimonial-scroll');
                   if (scroller) scroller.scrollBy({ left: -300, behavior: 'smooth' });
                 }}
-                className="flex w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center transition-all duration-300 border border-white/20 group/btn shadow-xl backdrop-blur-md flex-shrink-0 z-30"
+                className="absolute left-2 sm:-left-4 lg:-left-8 top-1/2 -translate-y-1/2 flex w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-[#0E462B] hover:bg-[#0B3F1D] items-center justify-center transition-all duration-300 border border-white/20 group/btn shadow-xl backdrop-blur-md flex-shrink-0 z-30"
                 aria-label="Previous testimonial"
               >
                 <ChevronLeft className="w-5 h-5 sm:w-8 sm:h-8 text-white group-hover/btn:-translate-x-1 transition-transform duration-300 ease-out" />
@@ -385,7 +300,7 @@ export default function Home() {
               {/* Scrollable Cards Reel - Centered */}
               <div
                 id="testimonial-scroll"
-                className="flex flex-row overflow-x-auto scrollbar-hide gap-4 sm:gap-8 lg:gap-12 pb-10 pt-6 w-full max-w-5xl snap-x snap-mandatory justify-start sm:justify-center px-2 sm:px-4"
+                className="flex flex-row overflow-x-auto scrollbar-hide gap-4 sm:gap-8 lg:gap-12 pb-10 pt-6 w-full snap-x snap-mandatory justify-start px-12 sm:px-8"
               >
                 {[
                   {
@@ -397,19 +312,34 @@ export default function Home() {
                     name: "Tanya",
                     text: "Never knew a mystery book could be exactly what I needed. Everything feels incredibly premium.",
                     img: CL2
+                  },
+                  {
+                    name: "Hiba Nasreen",
+                    text: "Thank you, Tellex! Your guided pick completely understood my vibe and helped me find the perfect book. I can't wait to start reading.",
+                    img: "/images/3.webp"
+                  },
+                  {
+                    name: "Prerna Shambhavee",
+                    text: "Thank you so much, Tellex! You gave me books exactly curated for my vibe not just random picks or things I’ve already read. This is amazing.",
+                    img: "/images/4.webp"
+                  },
+                  {
+                    name: "Sal",
+                    text: "Tellex truly understands me, I got the exact book matching my vibe.",
+                    img: "/images/5.webp"
                   }
                 ].map((t, idx) => (
                   <div
                     key={idx}
-                    className="flex-none w-full sm:w-[320px] lg:w-[360px] bg-white rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.12)] flex flex-col group transition-all duration-500 ease-out hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.15)] cursor-pointer relative overflow-hidden snap-center"
+                    className="flex-none w-[85vw] sm:w-[280px] lg:w-[320px] bg-white rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.12)] flex flex-col group transition-all duration-500 ease-out hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.15)] cursor-pointer relative overflow-hidden snap-center"
                   >
                     {/* Image Area - Further reduced for Mobile & Desktop */}
-                    <div className="w-full h-[260px] sm:h-[320px] lg:h-[360px] overflow-hidden relative bg-[#0E462B]/5 flex items-center justify-center p-4 sm:p-6 text-center">
+                    <div className="w-full h-[220px] sm:h-[260px] lg:h-[300px] overflow-hidden relative bg-[#0E462B]/5 flex items-center justify-center p-4 sm:p-6 text-center">
                       <div className="absolute inset-0 bg-[#0E462B]/5 z-10 transition-colors duration-500 ease-out group-hover:bg-transparent pointer-events-none"></div>
                       <img
                         src={t.img}
                         alt={`Customer ${t.name}`}
-                        className="w-full h-full object-contain transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+                        className="w-full h-full lg:w-[80%] lg:h-[80%] object-contain transition-transform duration-700 ease-out group-hover:scale-[1.04]"
                       />
                     </div>
 
@@ -418,7 +348,7 @@ export default function Home() {
                       {/* Star Rating */}
                       <div className="flex items-center gap-1 mb-3 sm:mb-4">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#2b8011] fill-current" />
+                          <Star key={i} className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#c8963e] fill-current" />
                         ))}
                       </div>
 
@@ -444,7 +374,7 @@ export default function Home() {
                   const scroller = document.getElementById('testimonial-scroll');
                   if (scroller) scroller.scrollBy({ left: 300, behavior: 'smooth' });
                 }}
-                className="flex w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center transition-all duration-300 border border-white/20 group/btn shadow-xl backdrop-blur-md flex-shrink-0 z-30"
+                className="absolute right-2 sm:-right-4 lg:-right-8 top-1/2 -translate-y-1/2 flex w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-[#0E462B] hover:bg-[#0B3F1D] items-center justify-center transition-all duration-300 border border-white/20 group/btn shadow-xl backdrop-blur-md flex-shrink-0 z-30"
                 aria-label="Next testimonial"
               >
                 <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8 text-white group-hover/btn:translate-x-1 transition-transform duration-300 ease-out" />
@@ -454,7 +384,7 @@ export default function Home() {
 
           {/* Pagination Indicators - Visible on Mobile */}
           <div className="flex justify-center mt-4 gap-2.5 sm:hidden">
-            {[...Array(2)].map((_, i) => (
+            {[...Array(5)].map((_, i) => (
               <div key={i} className={`w-2 h-2 rounded-full transition-all duration-300 ${i === 0 ? 'bg-white scale-125' : 'bg-white/30'}`}></div>
             ))}
           </div>
@@ -512,7 +442,7 @@ export default function Home() {
                   </div>
                   <div className="flex flex-col text-left">
                     <h4 className="text-[#0E462B] font-bold text-xl mb-1">Beautifully Wrapped</h4>
-                    <p className="text-gray-600 text-[15px]">Every box feels like a special gift to yourself.</p>
+                    <p className="text-gray-600 text-[15px]">Crafted with care and personalized through emotion and personality insights, creating a gift that truly resonates with the recipient.</p>
                   </div>
                 </div>
               </div>
@@ -537,64 +467,45 @@ export default function Home() {
         <ImageMarquee />
       </div>
 
-      <section className="py-12 sm:py-16 md:py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-14 sm:py-20 md:py-24 bg-white">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10">
           <h2
-            className="text-2xl sm:text-3xl md:text-4xl font-bold text-tellex-black text-center mb-8 sm:mb-12"
-            style={{ fontFamily: "'Poppins', sans-serif" }}
+            className="text-2xl sm:text-3xl md:text-[40px] font-bold text-[#0E462B] text-center mb-12 sm:mb-16 uppercase tracking-[0.14em]"
+            style={{ fontFamily: "'Inter', sans-serif" }}
           >
             Why Choose Tellex
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-            <div
-              className="p-5 sm:p-8 rounded-2xl shadow-lg scale-[0.95] sm:scale-100"
-              style={{ backgroundColor: '#fff1e8' }}
-            >
-
-              <Users className="text-tellex-dark-green mb-4" size={36} />
-              <h3
-                className="text-xl sm:text-2xl font-semibold text-tellex-dark-green mb-3"
-                style={{ fontFamily: "'Playfair Display', serif" }}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-10 items-stretch">
+            {WHY_CHOOSE_TELLEX.map(({ Icon, title, description }) => (
+              <div
+                key={title}
+                className="flex min-h-[300px] sm:min-h-[320px] lg:min-h-[340px] flex-col items-center rounded-[28px] border border-[#0E462B]/[0.07] bg-[#eef5ef] px-7 py-10 sm:px-8 sm:py-12 text-center shadow-[0_8px_32px_rgba(14,70,43,0.06)] transition-shadow duration-300 hover:shadow-[0_12px_40px_rgba(14,70,43,0.09)]"
               >
-                Personalised, Not Random
-              </h3>
-              <p className="text-tellex-black/70 text-sm sm:text-base">
-                Books are thoughtfully chosen using smart systems and human insight matched to your vibe, never picked blindly.
-              </p>
-            </div>
-
-            <div
-              className="p-5 sm:p-8 rounded-2xl shadow-lg scale-[0.95] sm:scale-100"
-              style={{ backgroundColor: '#fff1e8' }}
-            >
-              <Heart className="text-tellex-dark-green mb-4" size={36} />
-              <h3
-                className="text-xl sm:text-2xl font-semibold text-tellex-dark-green mb-3"
-                style={{ fontFamily: "'Playfair Display', serif" }}
-              >
-                Mystery With Meaning
-              </h3>
-              <p className="text-tellex-black/70 text-sm sm:text-base">
-                The surprise goes beyond hiding the title. Every mystery book fits your mood and feels emotionally right.
-              </p>
-            </div>
-
-            <div
-              className="p-5 sm:p-8 rounded-2xl shadow-lg scale-[0.95] sm:scale-100"
-              style={{ backgroundColor: '#fff1e8' }}
-            >
-              <Sparkles className="text-tellex-dark-green mb-4" size={36} />
-              <h3
-                className="text-xl sm:text-2xl font-semibold text-tellex-dark-green mb-3"
-                style={{ fontFamily: "'Playfair Display', serif" }}
-              >
-                More Than a Bookstore
-              </h3>
-              <p className="text-tellex-black/70 text-sm sm:text-base">
-                Tellex feels like a friend listening, understanding, and recommending the right book at the right time.
-              </p>
-            </div>
+                <div className="flex flex-1 w-full items-center justify-center px-1">
+                  <div className="inline-flex max-w-full items-center gap-3 sm:gap-3.5">
+                    <Icon
+                      className="shrink-0 text-[#0E462B]"
+                      size={26}
+                      strokeWidth={1.75}
+                      aria-hidden
+                    />
+                    <h3
+                      className="max-w-[9.75rem] sm:max-w-[10.5rem] text-left text-[1.35rem] sm:text-[1.4rem] lg:text-[1.45rem] font-bold leading-[1.22] text-[#0E462B] text-balance"
+                      style={{ fontFamily: "'Playfair Display', serif" }}
+                    >
+                      {title}
+                    </h3>
+                  </div>
+                </div>
+                <p
+                  className="mt-6 w-full max-w-[17rem] text-[15px] sm:text-base leading-[1.65] text-[#3f5348]"
+                  style={{ fontFamily: "'Inter', sans-serif" }}
+                >
+                  {description}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

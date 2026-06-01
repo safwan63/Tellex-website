@@ -12,12 +12,18 @@ export default function Flow() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   
-  // Enforce auth
+  // State restoration
   useEffect(() => {
-    if (!loading && !user) {
-      navigate('/login');
+    const savedState = sessionStorage.getItem("tellex_flow_state");
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        if (parsed.language) setLanguage(parsed.language);
+        if (parsed.mode) setMode(parsed.mode);
+        setStep(3); // Jump straight to the flow
+      } catch(e) {}
     }
-  }, [user, loading, navigate]);
+  }, []);
 
   const typeParam = searchParams.get("type");
   const type = typeParam === "vibe" ? "vibe" : "mystery"; // Default to mystery
@@ -27,8 +33,10 @@ export default function Flow() {
   const [language, setLanguage] = useState("");
   const [mode, setMode] = useState<"guided" | "free" | "">("");
 
-  if (loading || !user) {
-    return <div className="min-h-screen bg-[#FAF9F6]" />;
+  if (loading) {
+    return <div className="min-h-screen bg-[#FAF9F6] flex items-center justify-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0E462B]"></div>
+    </div>;
   }
 
   // Motion variants for smooth transitions

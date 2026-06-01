@@ -2,13 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import tellexBoxImg from './components/Image/tellexboxorg.webp';
-import vibePickImg from './components/Image/vibepick_experience.png';
 
 export default function Explore() {
   const [visibleSections, setVisibleSections] = useState<Record<string, boolean>>({
-    vibe: false,
     mystery: false,
-    direct: false,
   });
 
   const [mouseGlow, setMouseGlow] = useState<{ x: number; y: number; visible: boolean }>({
@@ -17,16 +14,10 @@ export default function Explore() {
     visible: false,
   });
 
-  const vibeRef = useRef<HTMLDivElement | null>(null);
   const mysteryRef = useRef<HTMLDivElement | null>(null);
-  const directRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const sections = [
-      { id: 'vibe', ref: vibeRef },
-      { id: 'mystery', ref: mysteryRef },
-      { id: 'direct', ref: directRef },
-    ];
+    const sections = [{ id: 'mystery', ref: mysteryRef }];
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -66,19 +57,15 @@ export default function Explore() {
     <main className="min-h-screen bg-tellex-dark-green">
       <Navbar />
 
-      
-
       {/* Three Ways to Discover – Editorial Journey */}
-      <section className="py-12 sm:py-16 md:py-20" style={{ backgroundColor: '#FAF9F6' }}>
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 sm:space-y-16 md:space-y-20">
+      <section
+        className="pt-4 sm:pt-5 md:pt-6 pb-12 sm:pb-16 md:pb-20"
+        style={{ backgroundColor: '#FAF9F6' }}
+      >
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5 sm:space-y-6 md:space-y-8">
           {/* Intro */}
-          <div className="text-center space-y-4 sm:space-y-6">
-            <p
-              className="tracking-[0.15em] text-xs sm:text-sm md:text-base uppercase"
-              style={{ color: '#8A8A7A', fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif' }}
-            >
-              TWO WAYS TO DISCOVER
-            </p>
+          <div className="text-center space-y-3 sm:space-y-4">
+            
             <h2
               className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl px-2"
               style={{
@@ -96,7 +83,7 @@ export default function Explore() {
                 color: '#4F4F46',
               }}
             >
-              Tellex offers two distinct paths into your next chapter each designed for readers who value intention,
+              A curated surprise path into your next chapter — designed for readers who value intention,
               emotional resonance, and considered curation over noise.
             </p>
           </div>
@@ -270,200 +257,6 @@ export default function Explore() {
               </div>
             </section>
           </div>
-
-          
-{/* SECTION 1 — VIBE PICK */}
-          <div
-            ref={vibeRef}
-            className={`transition-all duration-700 ease-out will-change-transform ${
-              visibleSections.vibe ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
-            }`}
-          >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
-                {/* Left Column - Content */}
-                <div className="space-y-4 sm:space-y-6">
-                  <p
-                    className="tracking-widest text-xs uppercase"
-                    style={{
-                      color: '#0E462B',
-                      fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
-                    }}
-                  >
-                    EMOTION-BASED
-                  </p>
-                  <h3
-                    className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl mb-3 sm:mb-4"
-                    style={{ fontFamily: "'Playfair Display', serif", color: '#0E462B' }}
-                  >
-                    Vibe Pick
-                  </h3>
-                  <p
-                    className="text-sm sm:text-base md:text-lg leading-relaxed"
-                    style={{
-                      fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
-                      color: '#3F3F36',
-                    }}
-                  >
-                    Pick your mood.We show books that match how you feel choose what connects.
-                  </p>
-
-                  {/* Mood Cloud */}
-                  <div className="flex flex-wrap gap-2 sm:gap-3 pt-2">
-                    {['Overthinking', 'Lonely', 'First Love', 'Self-Doubt', 'Depression', 'Feeling Uninspired'].map(
-                      (mood) => (
-                        <button
-                          key={mood}
-                          className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm md:text-base transition-all duration-300"
-                          style={{
-                            fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
-                            backgroundColor: '#e1cfbc',
-                            color: '#0E462B',
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#0E462B';
-                            e.currentTarget.style.color = '#FFFFFF';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = '#e1cfbc';
-                            e.currentTarget.style.color = '#0E462B';
-                          }}
-                        >
-                          {mood}
-                        </button>
-                      )
-                    )}
-                  </div>
-
-                  {/* CTA Button */}
-                  <div className="pt-4">
-                    <a
-                      href="/flow?type=vibe"
-                    >
-                      <button
-                        className="inline-flex items-center justify-center px-6 sm:px-8 py-2.5 sm:py-3.5 text-sm sm:text-base md:text-lg rounded-md transition-all duration-300 hover:opacity-90"
-                        style={{
-                          fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
-                          backgroundColor: '#0E462B',
-                          color: '#FFFFFF',
-                        }}
-                      >
-                        <span className="mr-2">Start My Vibe Journey</span>
-                        <svg
-                          width="20"
-                          height="20"
-                          viewBox="0 0 20 20"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="ml-1"
-                        >
-                          <path
-                            d="M7.5 15L12.5 10L7.5 5"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </button>
-                    </a>
-                  </div>
-                </div>
-
-                {/* Right Column - Mood Card visual */}
-                <div className="relative flex justify-end">
-                  <div
-                    className="relative rounded-2xl shadow-2xl"
-                    style={{
-                      backgroundColor: '#f5f1e8',
-                      padding: '1.75rem',
-                      borderRadius: '1.4rem',
-                      boxShadow:
-                        '0 26px 60px rgba(15, 24, 15, 0.42), 0 0 0 1px rgba(225, 207, 188, 0.55)',
-                    }}
-                  >
-                    {/* Inner framed image + book */}
-                    <div
-                      className="relative rounded-xl overflow-hidden cursor-pointer group"
-                      onClick={() => window.location.href = "/flow?type=vibe"}
-                      style={{
-                        borderRadius: '1.1rem',
-                        border: '1px solid #e1cfbc',
-                        backgroundColor: '#fdfaf5',
-                        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.18)',
-                        aspectRatio: '3 / 4',
-                      }}
-                    >
-                      <img
-                        src={vibePickImg}
-                        alt="A person deeply engrossed in reading, cinematic setting with soft warm lighting"
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                        fetchPriority="low"
-                        decoding="async"
-                      />
-                    </div>
-
-                    {/* Floating mood sticky note */}
-                    <div
-                      className="absolute -top-3 right-6 px-4 py-2"
-                      style={{
-                        backgroundColor: '#FBF7EF',
-                        borderRadius: '0.6rem',
-                        border: '1px solid rgba(210, 192, 164, 0.9)',
-                        boxShadow:
-                          '0 10px 25px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.85)',
-                        transform: 'rotate(-3deg)',
-                      }}
-                    >
-                      <p
-                        className="text-[0.7rem] tracking-[0.16em] uppercase mb-0.5"
-                        style={{
-                          fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
-                          color: '#8A8A7A',
-                          letterSpacing: '0.18em',
-                        }}
-                      >
-                        Current Mood
-                      </p>
-                      <p
-                        style={{
-                          fontFamily: "'Dancing Script', 'Brush Script MT', cursive, serif",
-                          fontSize: '1.05rem',
-                          color: '#3C3B35',
-                        }}
-                      >
-                        Depressed
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          </div>
-        </section>
-
-      <section className="py-12 sm:py-16 md:py-20 bg-tellex-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2
-            className="text-2xl sm:text-3xl md:text-4xl font-bold text-tellex-black mb-4 sm:mb-6"
-            style={{ fontFamily: "'Playfair Display', serif" }}
-          >
-            Not Sure Which to Choose?
-          </h2>
-          <p className="text-tellex-black/70 text-base sm:text-lg mb-6 sm:mb-8">
-            Tell us how you feel we'll turn your vibe into the perfect book surprise.
-          </p>
-          <button
-            onClick={() => {
-               window.location.href = '/flow?type=mystery';
-            }}
-            className="bg-tellex-dark-green hover:bg-tellex-dark-green/90 text-tellex-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-medium"
-          >
-            Take the Mystery Pick
-          </button>
         </div>
       </section>
 

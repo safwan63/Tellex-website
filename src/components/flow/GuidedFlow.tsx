@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -89,6 +89,24 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
   });
 
   const formValues = watch();
+
+  useEffect(() => {
+    const savedState = sessionStorage.getItem("tellex_flow_state");
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        if (parsed.mode === "guided") {
+          // Restore form values
+          Object.keys(parsed.formValues || {}).forEach((key) => {
+             setValue(key as any, parsed.formValues[key]);
+          });
+          if (parsed.section) setCurrentSection(parsed.section);
+          if (parsed.insight) setInsight(parsed.insight);
+          sessionStorage.removeItem("tellex_flow_state");
+        }
+      } catch (e) {}
+    }
+  }, [setValue]);
 
   const generateRiasecInsight = (data: FormData) => {
     let scores: Record<string, number> = { R:0, I:0, A:0, S:0, E:0, C:0 };
@@ -607,9 +625,25 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
             <div className="pt-2">
               <div className="flex gap-4">
                 <button onClick={handleBack} disabled={isSubmitting} className="px-6 py-4 font-medium text-gray-500 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50">Back</button>
-                <button onClick={handleNext} disabled={isSubmitting} className="flex-1 px-6 py-4 font-bold text-[#e1cfbc] bg-[#0E462B] rounded-lg hover:bg-[#0E462B]/90 shadow-lg disabled:opacity-50 transition-all uppercase tracking-wide">
-                  Proceed to Delivery Details
-                </button>
+                {user ? (
+                  <button onClick={handleNext} disabled={isSubmitting} className="flex-1 px-6 py-4 font-bold text-[#e1cfbc] bg-[#0E462B] rounded-lg hover:bg-[#0E462B]/90 shadow-lg disabled:opacity-50 transition-all uppercase tracking-wide">
+                    Proceed to Delivery Details
+                  </button>
+                ) : (
+                  <button onClick={() => {
+                    sessionStorage.setItem("tellex_flow_state", JSON.stringify({
+                      mode: "guided",
+                      type,
+                      language,
+                      section: 7,
+                      insight,
+                      formValues: watch()
+                    }));
+                    navigate("/login?redirect=/flow");
+                  }} disabled={isSubmitting} className="flex-1 px-6 py-4 font-bold text-[#0E462B] bg-[#e1cfbc] border-2 border-[#0E462B] rounded-lg hover:bg-[#e1cfbc]/80 shadow-lg disabled:opacity-50 transition-all uppercase tracking-wide">
+                    Login to Continue
+                  </button>
+                )}
               </div>
             </div>
           </motion.div>

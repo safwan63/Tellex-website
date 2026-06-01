@@ -22,6 +22,7 @@ interface Order {
   bookQuantity?: string;
   status: 'confirmed' | 'cancelled' | 'delivered' | 'pending';
   budget?: number;
+  cancellationReason?: string;
 }
 
 export default function Admin() {
@@ -29,7 +30,7 @@ export default function Admin() {
   const navigate = useNavigate();
   
   const [orders, setOrders] = useState<Order[]>([]);
-  const [filter, setFilter] = useState<"all" | "mystery" | "vibe">("all");
+  const [filter, setFilter] = useState<"all" | "mystery" | "vibe" | "active" | "cancelled">("all");
   const [isFetching, setIsFetching] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
@@ -195,7 +196,14 @@ export default function Admin() {
     return getBudgetPerBook(order) * qty;
   };
 
-  const filteredOrders = orders.filter(o => filter === "all" || o.type === filter);
+  const filteredOrders = orders.filter(o => {
+    if (filter === "all") return true;
+    if (filter === "active") return o.status !== 'cancelled';
+    if (filter === "cancelled") return o.status === 'cancelled';
+    if (filter === "mystery") return o.type === 'mystery';
+    if (filter === "vibe") return o.type === 'vibe';
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-[#FAF9F6]">
@@ -230,47 +238,63 @@ export default function Admin() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        {/* Stats & Filters */}
-        <div className="mb-8 flex flex-col sm:flex-row gap-6 justify-between items-start sm:items-center">
+        {/* Stats & Filters — click any card to filter */}
+        <div className="mb-8">
           <div className="flex flex-wrap gap-4">
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-[#E5E5E0] min-w-[120px]">
+            {/* Total Orders */}
+            <div 
+              onClick={() => setFilter(filter === "all" ? "all" : "all")}
+              className={`bg-white p-4 rounded-xl shadow-sm border min-w-[120px] cursor-pointer transition-all hover:shadow-md ${
+                filter === "all" ? "ring-2 ring-[#0E462B] border-[#0E462B]" : "border-[#E5E5E0]"
+              }`}
+            >
+              <p className="text-gray-500 text-sm font-medium">Total Orders</p>
+              <p className="text-3xl font-bold text-gray-900">{orders.length}</p>
+            </div>
+            {/* Active Orders */}
+            <div 
+              onClick={() => setFilter(filter === "active" ? "all" : "active")}
+              className={`bg-white p-4 rounded-xl shadow-sm border min-w-[120px] cursor-pointer transition-all hover:shadow-md ${
+                filter === "active" ? "ring-2 ring-[#0E462B] border-[#0E462B]" : "border-[#E5E5E0]"
+              }`}
+            >
               <p className="text-gray-500 text-sm font-medium">Active Orders</p>
               <p className="text-3xl font-bold text-[#0E462B]">{orders.filter(o => o.status !== 'cancelled').length}</p>
             </div>
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-[#E5E5E0] min-w-[120px]">
+            {/* Mystery Pick */}
+            <div 
+              onClick={() => setFilter(filter === "mystery" ? "all" : "mystery")}
+              className={`bg-white p-4 rounded-xl shadow-sm border min-w-[120px] cursor-pointer transition-all hover:shadow-md ${
+                filter === "mystery" ? "ring-2 ring-purple-500 border-purple-500" : "border-[#E5E5E0]"
+              }`}
+            >
               <p className="text-gray-500 text-sm font-medium">Mystery Pick</p>
-              <p className="text-3xl font-bold text-purple-700">{orders.filter(o => o.type === 'mystery' && o.status !== 'cancelled').length}</p>
+              <p className="text-3xl font-bold text-purple-700">{orders.filter(o => o.type === 'mystery').length}</p>
             </div>
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-[#E5E5E0] min-w-[120px]">
+            {/* Vibe Pick */}
+            <div 
+              onClick={() => setFilter(filter === "vibe" ? "all" : "vibe")}
+              className={`bg-white p-4 rounded-xl shadow-sm border min-w-[120px] cursor-pointer transition-all hover:shadow-md ${
+                filter === "vibe" ? "ring-2 ring-blue-500 border-blue-500" : "border-[#E5E5E0]"
+              }`}
+            >
               <p className="text-gray-500 text-sm font-medium">Vibe Pick</p>
-              <p className="text-3xl font-bold text-blue-700">{orders.filter(o => o.type === 'vibe' && o.status !== 'cancelled').length}</p>
+              <p className="text-3xl font-bold text-blue-700">{orders.filter(o => o.type === 'vibe').length}</p>
             </div>
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-red-100 min-w-[120px] bg-red-50/30">
+            {/* Cancelled */}
+            <div 
+              onClick={() => setFilter(filter === "cancelled" ? "all" : "cancelled")}
+              className={`p-4 rounded-xl shadow-sm border min-w-[120px] cursor-pointer transition-all hover:shadow-md ${
+                filter === "cancelled" ? "ring-2 ring-red-500 border-red-500 bg-red-50" : "border-red-100 bg-red-50/30"
+              }`}
+            >
               <p className="text-red-500 text-sm font-bold">Cancelled</p>
               <p className="text-3xl font-bold text-red-600">{orders.filter(o => o.status === 'cancelled').length}</p>
             </div>
           </div>
-
-          <div className="flex bg-white rounded-lg p-1 shadow-sm border border-[#E5E5E0]">
-            <button 
-              onClick={() => setFilter("all")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${filter === "all" ? "bg-[#0E462B] text-[#e1cfbc]" : "text-gray-600 hover:bg-gray-100"}`}
-            >
-              All Orders
-            </button>
-            <button 
-              onClick={() => setFilter("mystery")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center ${filter === "mystery" ? "bg-purple-100 text-purple-800 border border-purple-200" : "text-gray-600 hover:bg-gray-100"}`}
-            >
-              <Sparkles size={14} className="mr-1.5" /> Mystery Pick
-            </button>
-            <button 
-              onClick={() => setFilter("vibe")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center ${filter === "vibe" ? "bg-blue-100 text-blue-800 border border-blue-200" : "text-gray-600 hover:bg-gray-100"}`}
-            >
-              <Book size={14} className="mr-1.5" /> Vibe Pick
-            </button>
-          </div>
+          {filter !== "all" && (
+            <p className="mt-3 text-sm text-gray-500">Showing <span className="font-bold text-gray-800">{filteredOrders.length}</span> {filter} orders. <button onClick={() => setFilter("all")} className="text-[#0E462B] font-bold underline ml-1">Clear filter</button></p>
+          )}
         </div>
 
         {/* Orders List */}
@@ -409,10 +433,16 @@ export default function Admin() {
                               <div className="grid grid-cols-3"><dt className="text-gray-500">Reasons</dt><dd className="col-span-2 font-medium">{(order.answers?.reasons || []).join(', ')}</dd></div>
                               <div className="grid grid-cols-3"><dt className="text-gray-500">Wants</dt><dd className="col-span-2 font-medium">{(order.answers?.wants || []).join(', ')}</dd></div>
                               <div className="grid grid-cols-3"><dt className="text-gray-500">Book Type</dt><dd className="col-span-2 font-medium">{order.answers?.bookType}</dd></div>
-                               <div className="grid grid-cols-3 font-bold"><dt className="text-gray-500">Quantity</dt><dd className="col-span-2 text-[#0E462B]">{order.answers?.bookQuantity || '1'} {parseInt(String(order.answers?.bookQuantity || '1').replace(/\D/g, '')) === 1 ? 'Book' : 'Books'}</dd></div>
+                              <div className="grid grid-cols-3 font-bold"><dt className="text-gray-500">Quantity</dt><dd className="col-span-2 text-[#0E462B]">{order.answers?.bookQuantity || '1'} {parseInt(String(order.answers?.bookQuantity || '1').replace(/\D/g, '')) === 1 ? 'Book' : 'Books'}</dd></div>
                               <div className="grid grid-cols-3 font-bold"><dt className="text-gray-500">Price/Book</dt><dd className="col-span-2 text-[#0E462B]">₹{getBudgetPerBook(order)}</dd></div>
                               <div className="grid grid-cols-3"><dt className="text-gray-500">Language</dt><dd className="col-span-2 font-medium">{order.answers?.language}</dd></div>
                               <div className="grid grid-cols-3"><dt className="text-gray-500">Order Status</dt><dd className={`col-span-2 font-bold ${order.status === 'cancelled' ? 'text-red-500' : 'text-green-600'}`}>{order.status === 'cancelled' ? 'Cancelled by Customer' : 'Active / Processing'}</dd></div>
+                              {order.status === 'cancelled' && order.cancellationReason && (
+                                <div className="grid grid-cols-3 bg-red-50 p-2 rounded border border-red-100 mt-1">
+                                  <dt className="text-red-500 font-bold">Cancellation Reason</dt>
+                                  <dd className="col-span-2 font-medium text-red-700 italic">"{order.cancellationReason}"</dd>
+                                </div>
+                              )}
                               <div className="mt-2 text-gray-500">Books already read:</div>
                               <div className="p-3 bg-gray-100 rounded text-gray-800 italic">{order.answers?.readBooks}</div>
                             </dl>
@@ -426,6 +456,12 @@ export default function Admin() {
                               <div className="grid grid-cols-3 font-bold"><dt className="text-gray-500">Price/Book</dt><dd className="col-span-2 text-[#0E462B]">₹{getBudgetPerBook(order)}</dd></div>
                               <div className="grid grid-cols-3"><dt className="text-gray-500">Avoid</dt><dd className="col-span-2 font-medium text-red-600">{order.answers?.avoidTrigger}</dd></div>
                               <div className="grid grid-cols-3"><dt className="text-gray-500">Order Status</dt><dd className={`col-span-2 font-bold ${order.status === 'cancelled' ? 'text-red-500' : 'text-green-600'}`}>{order.status === 'cancelled' ? 'Cancelled by Customer' : 'Active / Processing'}</dd></div>
+                              {order.status === 'cancelled' && order.cancellationReason && (
+                                <div className="grid grid-cols-3 bg-red-50 p-2 rounded border border-red-100 mt-1">
+                                  <dt className="text-red-500 font-bold">Cancellation Reason</dt>
+                                  <dd className="col-span-2 font-medium text-red-700 italic">"{order.cancellationReason}"</dd>
+                                </div>
+                              )}
                               <div className="mt-2 text-gray-500">Books already read:</div>
                               <div className="p-3 bg-gray-100 rounded text-gray-800 italic">{order.answers?.readBooks}</div>
                             </dl>

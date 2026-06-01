@@ -125,7 +125,7 @@ function App() {
             
             {/* Protected Dashboard Routes */}
             <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-            <Route path="/flow" element={<PrivateRoute><Flow /></PrivateRoute>} />
+            <Route path="/flow" element={<Flow />} />
             <Route path="/my-orders" element={<PrivateRoute><MyOrders /></PrivateRoute>} />
             
             {/* Admin Routes */}
