@@ -193,7 +193,7 @@ export default function About() {
             Become part of a community that values meaningful reading experiences and emotional connections with stories.
           </p>
           <div className="flex justify-center">
-            <img
+            <img loading="lazy"
               src={qrCodeImage}
               alt="QR Code to join our reading community"
               className="w-48 h-48 sm:w-64 sm:h-64 object-contain rounded-lg bg-white p-3 sm:p-4"
@@ -246,7 +246,7 @@ export default function About() {
                 <div className="w-full aspect-[4/3] mb-5 overflow-hidden rounded-2xl relative">
                   <div className="absolute inset-0 bg-[#0E462B]/10 mix-blend-overlay z-10 group-hover:opacity-0 transition-opacity duration-500 z-20"></div>
                   <div className="w-full h-full transition-transform duration-700 ease-out group-hover:scale-[1.05]">
-                    <img
+                    <img loading="lazy"
                       src={founder.img}
                       alt={founder.name}
                       className={`w-full h-full object-cover ${founder.imgClass}`}

@@ -336,7 +336,7 @@ export default function Home() {
                     {/* Image Area - Further reduced for Mobile & Desktop */}
                     <div className="w-full h-[220px] sm:h-[260px] lg:h-[300px] overflow-hidden relative bg-[#0E462B]/5 flex items-center justify-center p-4 sm:p-6 text-center">
                       <div className="absolute inset-0 bg-[#0E462B]/5 z-10 transition-colors duration-500 ease-out group-hover:bg-transparent pointer-events-none"></div>
-                      <img
+                      <img loading="lazy"
                         src={t.img}
                         alt={`Customer ${t.name}`}
                         className="w-full h-full lg:w-[80%] lg:h-[80%] object-contain transition-transform duration-700 ease-out group-hover:scale-[1.04]"
@@ -402,7 +402,7 @@ export default function Home() {
                 onClick={() => window.location.href = "/flow?type=mystery"}
               >
                 <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-[85%] h-[30px] bg-black/40 blur-[20px] rounded-[100%] pointer-events-none -z-10"></div>
-                <img
+                <img loading="lazy"
                   src={mysteryBoxImage}
                   alt="Premium mystery book box experience"
                   className="w-full h-auto object-cover rounded-2xl shadow-2xl transition-transform duration-1000 group-hover:scale-[1.02]"

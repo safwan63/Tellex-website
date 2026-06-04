@@ -13,8 +13,8 @@ export type HeroCarouselSlide = {
 };
 export const heroCarouselSlides: HeroCarouselSlide[] = [
   {
-    desktop: '/images/b1.png',
-    mobile: '/images/b1mobile.png',
+    desktop: '/images/D1.png',
+    mobile: '/images/M1.png',
     alt: 'Curated mystery books and reading atmosphere',
     desktopWidth: D.minimumWidth,
     desktopHeight: D.minimumHeight,

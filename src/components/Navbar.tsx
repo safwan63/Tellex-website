@@ -51,7 +51,9 @@ export default function Navbar() {
   const getLinkClass = (href: string) => {
     const isActive = currentPath === href;
     return `px-3 py-2 text-sm lg:text-base font-medium rounded-md transition-colors duration-200 whitespace-nowrap ${
-      isActive ? 'text-[#0E462B] font-bold' : 'text-gray-600 hover:text-[#0E462B]'
+      isActive
+        ? 'bg-[#0E462B] text-white font-bold shadow-sm'
+        : 'text-gray-600 hover:text-[#0E462B] hover:bg-transparent'
     }`;
   };
 
@@ -70,7 +72,7 @@ export default function Navbar() {
                 e.preventDefault();
                 handleNavClick('/');
               }}
-              className="flex flex-col items-center justify-center shrink-0 min-w-0 max-w-[52%] sm:max-w-none transition-transform hover:scale-[1.02]"
+              className="-ml-3 flex flex-col items-center justify-center shrink-0 min-w-0 max-w-[72%] sm:max-w-none transition-transform hover:scale-[1.02]"
               style={{ textDecoration: 'none' }}
             >
               <span
@@ -80,7 +82,7 @@ export default function Navbar() {
                 Tellex
               </span>
               <span
-                className="text-[#0E462B]/60 text-[9px] sm:text-[10px] font-medium leading-tight mt-0.5 tracking-wide truncate max-w-[140px] sm:max-w-none"
+                className="text-[#0E462B]/60 text-[9px] sm:text-[10px] font-medium leading-tight mt-0.5 tracking-wide max-w-[72%] sm:max-w-none whitespace-normal text-center"
                 style={{ fontFamily: "'Inter', sans-serif" }}
               >
                 Let your feelings choose the perfect book
