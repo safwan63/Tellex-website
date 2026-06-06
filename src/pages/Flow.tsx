@@ -1,11 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
-import GuidedFlow from "../components/flow/GuidedFlow";
-import FreeFlow from "../components/flow/FreeFlow";
 import UserAvatar from "../components/UserAvatar";
 import { useAuth } from "../context/AuthContext";
+
+// Lazy load the heavy flow components — they contain forms, zod, react-hook-form
+const GuidedFlow = lazy(() => import("../components/flow/GuidedFlow"));
+const FreeFlow = lazy(() => import("../components/flow/FreeFlow"));
 
 export default function Flow() {
   const [searchParams] = useSearchParams();
@@ -198,8 +200,16 @@ export default function Flow() {
               transition={{ duration: 0.3 }}
               className="w-full"
             >
-              {mode === "guided" && <GuidedFlow type={type} language={language} onBack={handleBack} />}
-              {mode === "free" && <FreeFlow type={type} language={language} onBack={handleBack} />}
+              {mode === "guided" && (
+                <Suspense fallback={<div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0E462B]"></div></div>}>
+                  <GuidedFlow type={type} language={language} onBack={handleBack} />
+                </Suspense>
+              )}
+              {mode === "free" && (
+                <Suspense fallback={<div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0E462B]"></div></div>}>
+                  <FreeFlow type={type} language={language} onBack={handleBack} />
+                </Suspense>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

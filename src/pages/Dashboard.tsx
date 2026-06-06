@@ -4,6 +4,9 @@ import { useAuth } from '../context/AuthContext';
 import { Book, Sparkles } from 'lucide-react';
 import UserAvatar from '../components/UserAvatar';
 
+// Prefetch the Flow page chunk as soon as Dashboard loads
+const prefetchFlow = () => import('./Flow');
+
 export default function Dashboard() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
@@ -13,6 +16,17 @@ export default function Dashboard() {
       navigate('/login');
     }
   }, [user, loading, navigate]);
+
+  // Prefetch Flow chunk in idle time so navigation is instant
+  useEffect(() => {
+    const id = typeof requestIdleCallback !== 'undefined'
+      ? requestIdleCallback(() => prefetchFlow())
+      : setTimeout(() => prefetchFlow(), 200);
+    return () => {
+      if (typeof cancelIdleCallback !== 'undefined') cancelIdleCallback(id as number);
+      else clearTimeout(id as number);
+    };
+  }, []);
 
   if (loading || !user) {
     return (

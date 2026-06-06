@@ -17,6 +17,7 @@ export default defineConfig({
           firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
           motion: ['framer-motion'],
           ui: ['lucide-react'],
+          forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
         },
       },
     },

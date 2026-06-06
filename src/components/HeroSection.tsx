@@ -18,14 +18,14 @@ export default function HeroSection() {
     }
   );
 
+  // Preload only the NEXT slide (not all) for smooth transitions
   useEffect(() => {
-    heroCarouselSlides.forEach((slide) => {
-      [slide.desktop, slide.mobile].forEach((src) => {
-        const img = new Image();
-        img.src = src;
-      });
-    });
-  }, []);
+    const nextIndex = (index + 1) % heroCarouselSlides.length;
+    const nextSlide = heroCarouselSlides[nextIndex];
+    const isMobile = window.innerWidth < 1024;
+    const img = new Image();
+    img.src = isMobile ? nextSlide.mobile : nextSlide.desktop;
+  }, [index]);
 
   return (
     <section className="relative w-full flex flex-col min-h-screen">

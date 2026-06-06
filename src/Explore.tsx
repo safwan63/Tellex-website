@@ -240,7 +240,7 @@ export default function Explore() {
                       className="relative max-w-[80%] cursor-pointer group"
                       onClick={() => window.location.href = "/flow?type=mystery"}
                     >
-                      <img loading="lazy"
+                      <img
                         src={tellexBoxImg}
                         alt="TELLEX Mystery Box wrapped with cream ribbon"
                         className="w-full h-auto object-contain drop-shadow-2xl"
