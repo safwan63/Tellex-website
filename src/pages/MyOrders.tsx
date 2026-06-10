@@ -20,7 +20,10 @@ import {
   Tag, 
   Clock, 
   CreditCard,
-  MessageCircle
+  MessageCircle,
+  Truck,
+  CheckCircle,
+  ExternalLink
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -38,6 +41,14 @@ interface Order {
   answers?: any;
   budget?: number;
   cancellationReason?: string;
+  shipmentCreated?: boolean;
+  awbCode?: string;
+  courierName?: string;
+  trackingUrl?: string;
+  shipmentStatus?: string;
+  shippedAt?: Timestamp;
+  deliveredAt?: Timestamp;
+  estimatedDeliveryDate?: Timestamp;
 }
 
 export default function MyOrders() {
@@ -262,6 +273,27 @@ export default function MyOrders() {
     const qty = getBookQuantity(order);
     return getBudgetPerBook(order) * qty;
   };
+
+  const getTrackingSteps = (order: Order) => {
+    const isCancelled = order.status === 'cancelled';
+    const s = order.shipmentStatus || '';
+    const isDelivered = s === 'Delivered' || order.status === 'delivered';
+    const isOut = isDelivered || s === 'Out For Delivery';
+    const isTransit = isOut || s === 'In Transit';
+    const isPicked = isTransit || s === 'Picked Up';
+    const isPacked = isPicked || s === 'Packed';
+    
+    return [
+      { id: 'confirmed', label: 'Order Confirmed', icon: CheckCircle, isCompleted: !isCancelled },
+      { id: 'curated', label: 'Book Curated', icon: Package, isCompleted: !!order.shipmentCreated },
+      { id: 'packed', label: 'Packed', icon: Package, isCompleted: isPacked },
+      { id: 'picked_up', label: 'Picked Up', icon: Truck, isCompleted: isPicked },
+      { id: 'transit', label: 'In Transit', icon: Truck, isCompleted: isTransit },
+      { id: 'out', label: 'Out For Delivery', icon: Truck, isCompleted: isOut },
+      { id: 'delivered', label: 'Delivered', icon: Package, isCompleted: isDelivered }
+    ];
+  };
+
   if (authLoading || (loading && !orders.length && !error)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FDFCF7]">
@@ -565,6 +597,54 @@ export default function MyOrders() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Amazon-like Tracking Timeline */}
+                  {selectedOrder.status !== 'cancelled' && (
+                    <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                      <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wider">Order Tracking</h3>
+                      
+                      {selectedOrder.shipmentCreated && (
+                        <div className="mb-6 p-4 bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                          <div>
+                            <p className="text-xs font-bold text-gray-400 uppercase">Courier</p>
+                            <p className="font-bold text-[#0E462B]">{selectedOrder.courierName}</p>
+                            <p className="text-xs font-mono text-gray-600 mt-1">AWB: {selectedOrder.awbCode}</p>
+                          </div>
+                          {selectedOrder.trackingUrl && (
+                            <button onClick={() => window.open(selectedOrder.trackingUrl, '_blank')} className="px-4 py-2 bg-[#0E462B] text-white text-sm font-bold rounded-lg hover:bg-[#0E462B]/90 transition-colors flex items-center gap-2 w-full sm:w-auto justify-center">
+                              <ExternalLink size={14} /> Track Shipment
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="relative pl-4 space-y-6 overflow-hidden pb-2">
+                        {/* Vertical line */}
+                        <div className="absolute left-[35px] top-4 bottom-6 w-0.5 bg-gray-200 z-0"></div>
+                        
+                        {getTrackingSteps(selectedOrder).map((step, index) => {
+                          const Icon = step.icon;
+                          const steps = getTrackingSteps(selectedOrder);
+                          const isActive = step.isCompleted && (!steps[index + 1]?.isCompleted);
+                          return (
+                            <div key={step.id} className={`relative z-10 flex items-start gap-4 transition-all duration-300 ${step.isCompleted ? 'opacity-100' : 'opacity-40 grayscale'}`}>
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-colors duration-300 ${step.isCompleted ? (isActive ? 'bg-[#0E462B] text-white shadow-md scale-110' : 'bg-green-100 text-green-700') : 'bg-white border-2 border-gray-200 text-gray-400'}`}>
+                                <Icon size={isActive ? 20 : 18} />
+                              </div>
+                              <div className="pt-2">
+                                <p className={`font-bold ${isActive ? 'text-[#0E462B] text-base' : (step.isCompleted ? 'text-gray-900 text-sm' : 'text-gray-500 text-sm')}`}>
+                                  {step.label}
+                                </p>
+                                {isActive && step.id === 'transit' && (
+                                  <p className="text-xs text-[#0E462B] mt-1 font-medium">Your package is on the way.</p>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   {/* WhatsApp Notice */}
                   <div className="flex items-start sm:items-center gap-3 p-4 bg-[#25D366]/10 rounded-2xl border border-[#25D366]/20">

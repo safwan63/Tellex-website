@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { collection, query, orderBy, getDocs, deleteDoc, doc, addDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
-import { Sparkles, Book, LogOut, ChevronDown, CheckCircle, Trash2, AlertCircle, Plus, X } from 'lucide-react';
+import { Sparkles, Book, LogOut, ChevronDown, CheckCircle, Trash2, AlertCircle, Plus, X, Package, ExternalLink } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
 
@@ -23,6 +23,11 @@ interface Order {
   status: 'confirmed' | 'cancelled' | 'delivered' | 'pending';
   budget?: number;
   cancellationReason?: string;
+  shipmentCreated?: boolean;
+  awbCode?: string;
+  courierName?: string;
+  trackingUrl?: string;
+  shipmentStatus?: string;
 }
 
 export default function Admin() {
@@ -38,6 +43,9 @@ export default function Admin() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showManualModal, setShowManualModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [trackingModalOpen, setTrackingModalOpen] = useState<string | null>(null);
+  const [trackingData, setTrackingData] = useState({ awbCode: '', courierName: '', trackingUrl: '' });
   
   // Form state for manual order
   const [manualOrder, setManualOrder] = useState({
@@ -157,6 +165,38 @@ export default function Admin() {
       alert("Failed to update status");
     }
   };
+
+  const handleAddTracking = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!trackingModalOpen) return;
+    setIsSubmitting(true);
+    try {
+      await updateDoc(doc(db, "orders", trackingModalOpen), {
+        shipmentCreated: true,
+        shipmentStatus: "Packed",
+        awbCode: trackingData.awbCode,
+        courierName: trackingData.courierName,
+        trackingUrl: trackingData.trackingUrl,
+        shippedAt: serverTimestamp()
+      });
+      setOrders(orders.map(o => o.id === trackingModalOpen ? { 
+        ...o, 
+        shipmentCreated: true,
+        shipmentStatus: "Packed",
+        awbCode: trackingData.awbCode,
+        courierName: trackingData.courierName,
+        trackingUrl: trackingData.trackingUrl 
+      } : o));
+      setTrackingModalOpen(null);
+      setTrackingData({ awbCode: '', courierName: '', trackingUrl: '' });
+    } catch (err) {
+      console.error("Error adding tracking:", err);
+      alert("Failed to add tracking");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
 
   if (loading || !user || !isAdmin) {
     return (
@@ -491,10 +531,32 @@ export default function Admin() {
                           <div className="grid grid-cols-3"><dt className="text-gray-500">Order ID</dt><dd className="col-span-2 font-mono text-xs text-gray-400">{order.id}</dd></div>
                         </dl>
                         
-                        <div className="mt-6 text-center">
-                          <button className="w-full flex items-center justify-center gap-2 bg-[#0E462B] text-[#e1cfbc] py-3 px-4 rounded-lg font-medium hover:bg-[#0E462B]/90 transition-colors">
-                            <CheckCircle size={18} /> Mark as Processed
-                          </button>
+                        <div className="mt-6 flex flex-col gap-3">
+                          {!order.shipmentCreated ? (
+                            <button 
+                              onClick={() => setTrackingModalOpen(order.id)}
+                              className="w-full flex items-center justify-center gap-2 bg-[#0E462B] text-[#e1cfbc] py-3 px-4 rounded-lg font-medium hover:bg-[#0E462B]/90 transition-colors"
+                            >
+                              <Package size={18} /> Add Tracking & Mark Packed
+                            </button>
+                          ) : (
+                            <>
+                              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <p className="text-xs font-bold text-gray-400 uppercase mb-2">Shipment Details</p>
+                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                  <div><span className="text-gray-500">Status:</span> <span className="font-bold text-[#0E462B]">{order.shipmentStatus}</span></div>
+                                  <div><span className="text-gray-500">Courier:</span> <span className="font-medium">{order.courierName}</span></div>
+                                  <div className="col-span-2"><span className="text-gray-500">AWB:</span> <span className="font-mono text-gray-900">{order.awbCode}</span></div>
+                                </div>
+                              </div>
+                              <button 
+                                onClick={() => window.open(order.trackingUrl, '_blank')}
+                                className="w-full flex items-center justify-center gap-2 bg-gray-100 text-[#0E462B] py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                              >
+                                <ExternalLink size={18} /> View Tracking
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
                       
@@ -627,6 +689,42 @@ export default function Admin() {
                   className="w-full bg-[#0E462B] text-[#e1cfbc] py-4 rounded-xl font-bold text-lg hover:bg-[#0E462B]/90 transition-all shadow-lg active:scale-95 disabled:opacity-50"
                 >
                   {isSubmitting ? 'Adding Order...' : 'Create Order'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Tracking Modal */}
+      {trackingModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-[#0E462B]" style={{ fontFamily: "'Playfair Display', serif" }}>Add Tracking</h2>
+              <button onClick={() => setTrackingModalOpen(null)} className="p-2 hover:bg-gray-100 rounded-full">
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleAddTracking} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">AWB Number</label>
+                <input required value={trackingData.awbCode} onChange={e => setTrackingData({...trackingData, awbCode: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#0E462B]/20 outline-none font-mono" placeholder="1234567890" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Courier Partner</label>
+                <input required value={trackingData.courierName} onChange={e => setTrackingData({...trackingData, courierName: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#0E462B]/20 outline-none" placeholder="Delhivery, Bluedart, etc." />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Tracking URL</label>
+                <input required type="url" value={trackingData.trackingUrl} onChange={e => setTrackingData({...trackingData, trackingUrl: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#0E462B]/20 outline-none" placeholder="https://shiprocket.co/tracking/..." />
+              </div>
+              <div className="pt-4 flex gap-3">
+                <button type="button" onClick={() => setTrackingModalOpen(null)} className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors">
+                  Cancel
+                </button>
+                <button type="submit" disabled={isSubmitting} className="flex-1 py-3 bg-[#0E462B] text-[#e1cfbc] rounded-xl font-bold hover:bg-[#0E462B]/90 transition-colors disabled:opacity-50">
+                  {isSubmitting ? 'Saving...' : 'Save Tracking'}
                 </button>
               </div>
             </form>
