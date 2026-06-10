@@ -1,13 +1,14 @@
-import admin from 'firebase-admin';
+import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
 // Initialize Firebase Admin if not already initialized
-if (!admin.apps.length) {
+if (getApps().length === 0) {
   try {
     const serviceAccountStr = process.env.FIREBASE_SERVICE_ACCOUNT;
     if (serviceAccountStr) {
       const serviceAccount = JSON.parse(serviceAccountStr);
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
+      initializeApp({
+        credential: cert(serviceAccount)
       });
     } else {
       console.warn("FIREBASE_SERVICE_ACCOUNT is not set. Webhook will fail to update Firestore.");
@@ -47,13 +48,12 @@ export const handler = async (event) => {
     }
 
     // 2. Parse Payload
-    const payload = JSON.parse(event.body);
+    const payload = JSON.parse(event.body || "{}");
     console.log("Received Webhook Payload:", JSON.stringify(payload));
 
     const awb = payload.awb || payload.awb_code;
     const shipmentId = payload.shipment_id;
     const currentStatus = payload.current_status || payload.status;
-    const dateStr = payload.scanned_datetime || payload.date; // depending on payload version
 
     if (!awb && !shipmentId) {
       return {
@@ -88,7 +88,7 @@ export const handler = async (event) => {
     }
 
     // 4. Find and Update Firestore
-    const db = admin.firestore();
+    const db = getFirestore();
     const ordersRef = db.collection('orders');
     let querySnapshot;
 
@@ -111,11 +111,11 @@ export const handler = async (event) => {
     const orderDoc = querySnapshot.docs[0];
     const updateData = {
       shipmentStatus: newStatus,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      updatedAt: FieldValue.serverTimestamp()
     };
 
     if (newStatus === 'Delivered') {
-      updateData.deliveredAt = admin.firestore.FieldValue.serverTimestamp();
+      updateData.deliveredAt = FieldValue.serverTimestamp();
       updateData.status = 'delivered'; // Update the main status field as well
     }
 
