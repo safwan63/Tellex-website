@@ -86,7 +86,7 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
       reasons: [],
       wants: [],
       bookQuantity: "",
-      budget: "389"
+      budget: language === "Malayalam" ? "499" : "389"
     }
   });
 
@@ -251,7 +251,7 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
         status: "confirmed",
         mood: `${data.emotion === "✍️ Other" ? data.emotionOther : data.emotion} | ${data.lifeSituation === "✍️ Other" ? data.lifeSituationOther : data.lifeSituation}`,
         mode: "guided",
-        budget: parseInt(data.budget || "389"),
+        budget: parseInt(data.budget || (language === "Malayalam" ? "499" : "389")),
         answers: {
           emotion: data.emotion === "✍️ Other" ? data.emotionOther : data.emotion,
           lifeSituation: data.lifeSituation === "✍️ Other" ? data.lifeSituationOther : data.lifeSituation,
@@ -262,7 +262,7 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
           bookType: data.bookType,
           readBooks: data.readBooks,
           bookQuantity: data.bookQuantity,
-          budget: parseInt(data.budget || "389"),
+          budget: parseInt(data.budget || (language === "Malayalam" ? "499" : "389")),
           language: language
         },
         riasecScores: insight.scores,
@@ -277,7 +277,7 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
           whatsapp: data.whatsapp
         },
         address: `${data.firstName} ${data.lastName}, ${data.address}, ${data.city} - ${data.pincode}`,
-        price: parseInt(data.budget || "389") * parseInt(data.bookQuantity || "1"),
+        price: parseInt(data.budget || (language === "Malayalam" ? "499" : "389")) * parseInt(data.bookQuantity || "1"),
         createdAt: serverTimestamp()
       });
       
@@ -314,7 +314,7 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
   };
 
   // Lists for mapping
-  const budgets = ["389"];
+  const budgets = [language === "Malayalam" ? "499" : "389"];
   const emotions = ["😊 Happy", "😌 Peaceful", "😟 Anxious", "😔 Low / Sad", "😤 Frustrated", "😍 Hopeful", "⬜ Empty", "✍️ Other"];
   const lifeSituations = ["✨ New beginnings", "💔 Heartbreak or loss", "🌀 Feeling stuck or confused", "📈 Seeking personal growth", "🧘 Need mental calm", "🎯 Working toward a goal", "✍️ Other"];
   const decisionStyles = ["Think deeply and analyze", "Feel through it", "Take action quickly", "Talk to someone"];
@@ -408,13 +408,13 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
                      <Sparkles size={14} className="text-[#0E462B]" /> Mystery pick based on your feelings
                    </p>
                    <div className="inline-flex items-center justify-center px-3.5 py-1 bg-[#0E462B] text-white rounded-full w-fit">
-                     <span className="text-[13px] font-medium whitespace-nowrap">Book Type: Printed Edition</span>
+                     <span className="text-[13px] font-medium whitespace-nowrap">Book Type: {language === "Malayalam" ? "Original Edition" : "Printed Edition"}</span>
                    </div>
                  </div>
                  
                  <div className="flex items-end justify-between border-b border-gray-100 pb-5">
                    <div className="flex items-baseline gap-2.5">
-                     <h3 className="text-4xl sm:text-5xl font-black text-gray-900 tracking-tight">₹389</h3>
+                     <h3 className="text-4xl sm:text-5xl font-black text-gray-900 tracking-tight">₹{language === "Malayalam" ? "499" : "389"}</h3>
                      <span className="text-gray-400 line-through text-lg font-medium">₹699</span>
                    </div>
                    <p className="text-xs text-gray-500 font-medium flex items-center gap-1 mb-1">
