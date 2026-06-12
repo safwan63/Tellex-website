@@ -128,7 +128,7 @@ export default function Flow() {
               </h2>
               
               <div className="grid grid-cols-1 gap-4">
-                {["English", "Hindi", "Malayalam"].map((lang) => (
+                {["English", "Malayalam"].map((lang) => (
                   <button
                     key={lang}
                     onClick={() => {

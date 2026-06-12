@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { db } from "../../firebase";
 import { useAuth } from "../../context/AuthContext";
 import { Sparkles, ChevronDown } from "lucide-react";
+import tellexquestionImg from "../Image/tellexquestion.webp";
 
 // --- Validations ---
 const vibeSchema = z.object({
@@ -31,6 +32,7 @@ const deliverySchema = z.object({
   city: z.string().min(2, "City is required"),
   pincode: z.string().regex(/^[0-9]{6}$/, "Must be a 6 digit pincode"),
   whatsapp: z.string().regex(/^[0-9]{10}$/, "Must be a valid 10 digit number"),
+  alternativeNo: z.string().refine(val => !val || /^[0-9]{10}$/.test(val), "Must be a valid 10 digit number").optional(),
 });
 
 const fullSchema = z.object({
@@ -58,14 +60,21 @@ export default function FreeFlow({ type, language, onBack }: Props) {
   const [orderComplete, setOrderComplete] = useState(false);
   const [insight, setInsight] = useState<{ response: string, preview: string } | null>(null);
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
+  const [showBreakdown, setShowBreakdown] = useState(false);
 
   const { register, handleSubmit, trigger, watch, setValue, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(fullSchema),
     defaultValues: {
       bookQuantity: "",
-      budget: language === "Malayalam" ? "499" : "389"
+      budget: "449"
     }
   });
+
+  const isMalayalam = language.toLowerCase() === 'malayalam';
+  const editionText = isMalayalam ? "Original Edition" : "1st Edition";
+  const cards = isMalayalam
+    ? [ { price: 449, cut: 499 }, { price: 549, cut: 599 }, { price: 649, cut: 699 } ]
+    : [ { price: 449, cut: 499 }, { price: 549, cut: 599 }, { price: 649, cut: 699 }, { price: 749, cut: 799 }, { price: 849, cut: 899 } ];
 
   const formValues = watch();
 
@@ -129,14 +138,14 @@ export default function FreeFlow({ type, language, onBack }: Props) {
         status: "confirmed",
         mood: data.vibe,
         mode: "free",
-        budget: parseInt(data.budget || (language === "Malayalam" ? "499" : "389")),
+        budget: parseInt(data.budget || "389"),
         answers: {
           vibe: data.vibe,
           bookType: data.bookType || "Any",
           avoidTrigger: data.avoidTrigger || "None",
           readBooks: data.readBooks,
           bookQuantity: data.bookQuantity,
-          budget: parseInt(data.budget || (language === "Malayalam" ? "499" : "389")),
+          budget: parseInt(data.budget || "389"),
           language: language
         },
         riasecScores: { I:0, A:0, S:0, E:0, C:0, R:0 }, // Unscored for free flow
@@ -148,10 +157,11 @@ export default function FreeFlow({ type, language, onBack }: Props) {
           address: data.address,
           city: data.city,
           pincode: data.pincode,
-          whatsapp: data.whatsapp
+          whatsapp: data.whatsapp,
+          alternativeNo: data.alternativeNo || null
         },
         address: `${data.firstName} ${data.lastName}, ${data.address}, ${data.city} - ${data.pincode}`,
-        price: parseInt(data.budget || (language === "Malayalam" ? "499" : "389")) * parseInt(data.bookQuantity || "1"),
+        price: parseInt(data.budget || "389") * parseInt(data.bookQuantity || "1"),
         createdAt: serverTimestamp()
       });
       
@@ -171,7 +181,7 @@ export default function FreeFlow({ type, language, onBack }: Props) {
     exit: { opacity: 0, x: -20 },
   };
 
-  const budgets = [language === "Malayalam" ? "499" : "389"];
+  const budgets = ["389"];
 
   if (orderComplete) {
     return (
@@ -241,8 +251,8 @@ export default function FreeFlow({ type, language, onBack }: Props) {
             <div className="bg-white rounded-3xl overflow-hidden shadow-xl border border-[#E5E5E0]">
               <div className="h-64 w-full relative overflow-hidden bg-[#e1cfbc]">
                  <picture>
-                   <source media="(min-width: 768px)" srcSet="/images/mysterybxd.png" />
-                   <img src="/images/mysterybxm.png" alt="Mystery Book" className="w-full h-full object-contain p-4 mix-blend-multiply opacity-90" />
+                   <source media="(min-width: 768px)" srcSet={tellexquestionImg} />
+                   <img src={tellexquestionImg} alt="Mystery Book" className="w-full h-full object-contain p-4 mix-blend-multiply opacity-90" />
                  </picture>
                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex items-end p-6">
                    <h2 className="text-4xl font-bold text-white drop-shadow-md" style={{ fontFamily: "'Playfair Display', serif" }}>The Mystery Pick</h2>
@@ -254,19 +264,23 @@ export default function FreeFlow({ type, language, onBack }: Props) {
                      <Sparkles size={14} className="text-[#0E462B]" /> Mystery pick based on your feelings
                    </p>
                    <div className="inline-flex items-center justify-center px-3.5 py-1 bg-[#0E462B] text-white rounded-full w-fit">
-                     <span className="text-[13px] font-medium whitespace-nowrap">Book Type: {language === "Malayalam" ? "Original Edition" : "Printed Edition"}</span>
+                     <span className="text-[13px] font-medium whitespace-nowrap">Book Type: {editionText}</span>
                    </div>
                  </div>
                  
-                 <div className="flex items-end justify-between border-b border-gray-100 pb-5">
-                   <div className="flex items-baseline gap-2.5">
-                     <h3 className="text-4xl sm:text-5xl font-black text-gray-900 tracking-tight">₹{language === "Malayalam" ? "499" : "389"}</h3>
-                     <span className="text-gray-400 line-through text-lg font-medium">₹699</span>
-                   </div>
-                   <p className="text-xs text-gray-500 font-medium flex items-center gap-1 mb-1">
-                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg> 
-                     3 Days Return Policy
-                   </p>
+                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border-b border-gray-100 pb-5">
+                   {cards.map(c => (
+                     <div 
+                       key={c.price} 
+                       onClick={() => setValue("budget", c.price.toString())} 
+                       className={`p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${formValues.budget === c.price.toString() ? 'border-[#0E462B] bg-[#0E462B]/5 shadow-md scale-105' : 'border-[#E5E5E0] hover:border-[#0E462B]/30'}`}
+                     >
+                       <div className="flex items-baseline gap-2">
+                         <h3 className="text-2xl font-black text-gray-900 tracking-tight">₹{c.price}</h3>
+                         <span className="text-gray-400 line-through text-sm font-medium">₹{c.cut}</span>
+                       </div>
+                     </div>
+                   ))}
                  </div>
 
                  <div className="pt-2">
@@ -290,7 +304,14 @@ export default function FreeFlow({ type, language, onBack }: Props) {
                          className="overflow-hidden"
                        >
                          <div className="prose prose-sm sm:prose-base text-gray-600 pt-6 pb-2 space-y-4 px-2">
-                           <p className="font-bold text-[#0E462B] text-xl leading-snug" style={{ fontFamily: "'Playfair Display', serif" }}>Not knowing is part of the magic.</p>
+                           <h3 className="font-bold text-gray-800 text-lg mb-2">Product Details</h3>
+                           <ul className="text-sm space-y-1 mb-4 text-gray-600">
+                             <li><span className="font-semibold text-gray-800">Book Cover:</span> Paperback</li>
+                             <li><span className="font-semibold text-gray-800">Book Type:</span> {editionText}</li>
+                             <li><span className="font-semibold text-gray-800">Return Policy:</span> 3 days return policy</li>
+                             <li><span className="font-semibold text-gray-800">Payment Method:</span> Pay at your doorstep</li>
+                           </ul>
+                           <p className="font-bold text-[#0E462B] text-xl leading-snug mt-6" style={{ fontFamily: "'Playfair Display', serif" }}>Not knowing is part of the magic.</p>
                            <p className="text-md">Mystery Pick is for readers who love surprises, curiosity, and the excitement of discovering something chosen especially for them.</p>
                            <p className="text-md">Tell us about yourself through a few questions or simply share your interests, favorite genres, and what kind of reading experience you're looking for. We'll carefully select a book that matches you. <br/><span className="font-bold text-[#0E462B] inline-block mt-2">The title remains a secret until you open the box.</span></p>
 
@@ -426,7 +447,24 @@ export default function FreeFlow({ type, language, onBack }: Props) {
               <div className="flex justify-between border-b pb-2"><span className="text-gray-500">Language</span><span className="font-medium text-right">{language}</span></div>
               <div className="flex justify-between border-b pb-2"><span className="text-gray-500">Book Type</span><span className="font-medium text-right">{formValues.bookType || "Any"}</span></div>
               <div className="flex justify-between border-b pb-2"><span className="text-gray-500">Quantity</span><span className="font-medium text-right">{formValues.bookQuantity} {parseInt(formValues.bookQuantity) === 1 ? 'Book' : 'Books'}</span></div>
-              <div className="flex justify-between border-b pb-2"><span className="text-gray-500">Budget per book</span><span className="font-medium text-right">₹{formValues.budget}</span></div>
+              <div className="flex flex-col border-b pb-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500">Budget per book</span>
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => setShowBreakdown(!showBreakdown)} className="text-xs text-[#0E462B] font-bold underline underline-offset-2">
+                      {showBreakdown ? "Hide Breakdown" : "View Breakdown"}
+                    </button>
+                    <span className="font-medium text-right">₹{formValues.budget}</span>
+                  </div>
+                </div>
+                {showBreakdown && (
+                  <div className="mt-3 bg-[#e1cfbc]/20 p-4 rounded-xl border border-[#e1cfbc]/50 space-y-2">
+                    <div className="flex justify-between text-sm"><span className="text-gray-600">Book Price</span><span className="font-medium">₹{(parseInt(formValues.budget || "0") - 150) * parseInt(formValues.bookQuantity || "1")}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-gray-600">Service Charge</span><span className="font-medium">₹{150 * parseInt(formValues.bookQuantity || "1")}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-gray-600">Delivery Charge</span><span className="font-bold text-green-600 uppercase text-xs tracking-wider pt-0.5">Free</span></div>
+                  </div>
+                )}
+              </div>
               <div className="flex justify-between pb-2"><span className="text-gray-500">Total Price</span><span className="font-bold text-[#0E462B] text-right text-lg">₹{(parseInt(formValues.budget || "0") * parseInt(formValues.bookQuantity || "1")).toString()}</span></div>
             </div>
 
@@ -500,10 +538,17 @@ export default function FreeFlow({ type, language, onBack }: Props) {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp Number</label>
-              <input {...register("whatsapp")} maxLength={10} className="w-full px-4 py-3 border-2 border-[#E5E5E0] rounded-lg focus:border-[#0E462B] outline-none" placeholder="9876543210" />
-              {errors.whatsapp && <p className="text-red-500 text-xs mt-1">{errors.whatsapp.message}</p>}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp Number</label>
+                <input {...register("whatsapp")} maxLength={10} className="w-full px-4 py-3 border-2 border-[#E5E5E0] rounded-lg focus:border-[#0E462B] outline-none" placeholder="9876543210" />
+                {errors.whatsapp && <p className="text-red-500 text-xs mt-1">{errors.whatsapp.message}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Alternative No <span className="font-normal text-gray-400">(Optional)</span></label>
+                <input {...register("alternativeNo")} maxLength={10} className="w-full px-4 py-3 border-2 border-[#E5E5E0] rounded-lg focus:border-[#0E462B] outline-none" placeholder="Optional" />
+                {errors.alternativeNo && <p className="text-red-500 text-xs mt-1">{errors.alternativeNo.message}</p>}
+              </div>
             </div>
 
             <div className="pt-2">
