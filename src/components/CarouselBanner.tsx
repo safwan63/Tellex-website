@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
-import tellexstoreorg from './Image/tellexstoreorg.webp';
-import tellexstoreorgMobile from './Image/tellexstoreorgMobile.webp';
+import tellexstoreorg from './Image/D1.png';
+import tellexstoreorgMobile from './Image/M1.png';
 
 
 interface CarouselBannerProps {
