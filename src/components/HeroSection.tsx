@@ -13,7 +13,7 @@ export default function HeroSection() {
   const { index, setIndex, next, prev, swipeHandlers } = useCarouselNavigation(
     heroCarouselSlides.length,
     {
-      autoPlayInterval: 5000,
+      autoPlayInterval: 2500,
       paused: carouselHovered || lightboxOpen,
     }
   );
