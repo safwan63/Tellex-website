@@ -94,7 +94,7 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
   });
 
   const isMalayalam = language.toLowerCase() === 'malayalam';
-  const editionText = isMalayalam ? "Original Edition" : "1st Edition";
+  const editionText = "1st Edition";
   const cards = isMalayalam
     ? [ { price: 449, cut: 499 }, { price: 549, cut: 599 }, { price: 649, cut: 699 } ]
     : [ { price: 449, cut: 499 }, { price: 549, cut: 599 }, { price: 649, cut: 699 }, { price: 749, cut: 799 }, { price: 849, cut: 899 } ];
