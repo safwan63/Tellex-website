@@ -72,6 +72,16 @@ export default function MyOrders() {
   const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
   const [cancellationReason, setCancellationReason] = useState("");
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isEditingQuantity, setIsEditingQuantity] = useState(false);
+  const [newQuantity, setNewQuantity] = useState(1);
+
+  const isOrderLocked = (order: Order) => {
+    if (order.status === 'cancelled' || order.status === 'delivered') return true;
+    if (order.shipmentCreated || order.awbCode || order.trackingUrl) return true;
+    const s = order.shipmentStatus || '';
+    if (s === 'Packed' || s === 'Picked Up' || s === 'In Transit' || s === 'Out For Delivery' || s === 'Delivered') return true;
+    return false;
+  };
 
   // Auth Guard
   useEffect(() => {
@@ -164,6 +174,38 @@ export default function MyOrders() {
       whatsapp: order.delivery?.whatsapp || ""
     });
     setIsEditing(true);
+  };
+
+  const handleUpdateQuantity = async () => {
+    if (!selectedOrder) return;
+    setIsSaving(true);
+    try {
+      const orderRef = doc(db, "orders", selectedOrder.id);
+      const budgetPerBook = getBudgetPerBook(selectedOrder);
+      const newPrice = budgetPerBook * newQuantity;
+      
+      const updatePayload = {
+        bookQuantity: newQuantity.toString(),
+        "answers.bookQuantity": newQuantity.toString(),
+        price: newPrice
+      };
+
+      await updateDoc(orderRef, updatePayload);
+      
+      const updatedAnswers = { ...selectedOrder.answers, bookQuantity: newQuantity.toString() };
+      setSelectedOrder({
+        ...selectedOrder,
+        bookQuantity: newQuantity.toString(),
+        answers: updatedAnswers,
+        price: newPrice
+      });
+      setIsEditingQuantity(false);
+    } catch (err: any) {
+      console.error("Error updating quantity:", err);
+      alert("Failed to update quantity. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleUpdateAddress = async () => {
@@ -403,7 +445,7 @@ export default function MyOrders() {
                       <span className="text-lg font-bold text-[#0E462B]">₹{getDisplayPrice(order)}</span>
                       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">₹{getBudgetPerBook(order)} each</span>
                     </div>
-                    {order.status === 'confirmed' && (
+                    {!isOrderLocked(order) && order.status === 'confirmed' && (
                       <button
                         onClick={(e) => handleCancelOrder(e, order.id)}
                         className="text-xs font-bold text-red-500 hover:underline px-2 py-1"
@@ -448,10 +490,10 @@ export default function MyOrders() {
                     <p className="text-sm font-mono text-gray-500 tracking-tight">#{selectedOrder.id.toUpperCase()}</p>
                   </div>
                   <button 
-                    onClick={() => { setSelectedOrder(null); setIsEditing(false); }}
-                    className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+                    onClick={() => { setSelectedOrder(null); setIsEditing(false); setIsEditingQuantity(false); }}
+                    className="p-2 bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 transition-colors"
                   >
-                    <X className="w-5 h-5 text-gray-600" />
+                    <X className="w-5 h-5" />
                   </button>
                 </div>
 
@@ -465,10 +507,38 @@ export default function MyOrders() {
                       </p>
                     </div>
                     <div className="bg-gray-50 p-4 rounded-2xl">
-                      <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Quantity</p>
-                      <p className="font-bold text-[#0E462B]">
-                        {getBookQuantity(selectedOrder)} {getBookQuantity(selectedOrder) === 1 ? 'Book' : 'Books'}
-                      </p>
+                      <div className="flex justify-between items-start mb-1">
+                        <p className="text-[10px] uppercase font-bold text-gray-400">Quantity</p>
+                        {!isOrderLocked(selectedOrder) && selectedOrder.status === 'confirmed' && (
+                          <button 
+                            onClick={() => { 
+                              if (!isEditingQuantity) setNewQuantity(getBookQuantity(selectedOrder));
+                              setIsEditingQuantity(!isEditingQuantity); 
+                            }} 
+                            className="text-[10px] font-bold text-[#0E462B] hover:underline"
+                          >
+                            {isEditingQuantity ? 'Cancel' : 'Edit'}
+                          </button>
+                        )}
+                      </div>
+                      {isEditingQuantity ? (
+                        <div className="flex items-center gap-2 mt-1">
+                          <button onClick={() => setNewQuantity(Math.max(1, newQuantity - 1))} className="w-6 h-6 rounded bg-gray-200 flex items-center justify-center font-bold text-gray-700 hover:bg-gray-300">-</button>
+                          <span className="font-bold text-[#0E462B] w-4 text-center text-sm">{newQuantity}</span>
+                          <button onClick={() => setNewQuantity(newQuantity + 1)} className="w-6 h-6 rounded bg-[#0E462B] text-white flex items-center justify-center font-bold hover:bg-[#0E462B]/90">+</button>
+                          <button 
+                            onClick={handleUpdateQuantity} 
+                            disabled={isSaving || newQuantity === getBookQuantity(selectedOrder)} 
+                            className="ml-auto px-3 py-1 bg-[#0E462B] text-white text-[10px] rounded font-bold disabled:opacity-50 hover:bg-[#0E462B]/90"
+                          >
+                            {isSaving ? "Saving..." : "Save"}
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="font-bold text-[#0E462B]">
+                          {getBookQuantity(selectedOrder)} {getBookQuantity(selectedOrder) === 1 ? 'Book' : 'Books'}
+                        </p>
+                      )}
                     </div>
                     <div className="bg-gray-50 p-4 rounded-2xl">
                       <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Price/Book</p>
@@ -519,7 +589,7 @@ export default function MyOrders() {
                       <div className="flex-1">
                         <div className="flex justify-between items-center mb-1">
                           <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">Delivery Address</p>
-                          {!isEditing && selectedOrder.status === 'confirmed' && (
+                          {!isEditing && !isOrderLocked(selectedOrder) && selectedOrder.status === 'confirmed' && (
                             <button 
                               onClick={() => startEditing(selectedOrder)}
                               className="text-[11px] font-bold text-[#0E462B] hover:underline"
