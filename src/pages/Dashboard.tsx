@@ -62,12 +62,12 @@ export default function Dashboard() {
           <h2 className="text-3xl sm:text-4xl font-bold text-[#0E462B] mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
             Welcome back.
           </h2>
-          <p className="text-gray-600 text-lg">Your next chapter awaits. Choose how you'd like to discover it.</p>
+          <p className="text-gray-600 text-lg">Your next chapter awaits.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="flex justify-center max-w-md mx-auto">
           {/* Mystery Pick Card */}
-          <div className="bg-white rounded-2xl p-8 border border-[#0E462B]/10 shadow-lg hover:shadow-xl transition-shadow flex flex-col h-full">
+          <div className="bg-white rounded-2xl p-8 border border-[#0E462B]/10 shadow-lg hover:shadow-xl transition-shadow flex flex-col w-full">
             <div className="w-14 h-14 bg-[#0E462B] rounded-xl flex items-center justify-center mb-6">
               <Sparkles className="text-[#e1cfbc]" size={28} />
             </div>
@@ -82,25 +82,6 @@ export default function Dashboard() {
               className="inline-flex justify-center items-center w-full py-3.5 px-4 rounded-lg bg-[#0E462B] text-[#e1cfbc] font-medium hover:bg-[#0E462B]/90 transition-colors shadow-sm"
             >
               Start Mystery Pick
-            </Link>
-          </div>
-
-          {/* Vibe Pick Card */}
-          <div className="bg-white rounded-2xl p-8 border border-[#e1cfbc] shadow-lg hover:shadow-xl transition-shadow flex flex-col h-full">
-            <div className="w-14 h-14 bg-[#FAF9F6] border border-[#e1cfbc] rounded-xl flex items-center justify-center mb-6">
-              <Book className="text-[#0E462B]" size={28} />
-            </div>
-            <h3 className="text-2xl font-bold text-[#0E462B] mb-3" style={{ fontFamily: "'Playfair Display', serif" }}>
-              Vibe Pick
-            </h3>
-            <p className="text-gray-600 mb-8 flex-grow">
-              Tell us exactly what you're looking for. We'll match you with the perfect book and reveal it to you within 24 hours.
-            </p>
-            <Link 
-              to="/flow?type=vibe"
-              className="inline-flex justify-center items-center w-full py-3.5 px-4 rounded-lg bg-white border-2 border-[#0E462B] text-[#0E462B] font-medium hover:bg-[#FAF9F6] transition-colors shadow-sm"
-            >
-              Start Vibe Pick
             </Link>
           </div>
         </div>
