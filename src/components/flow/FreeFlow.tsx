@@ -44,6 +44,9 @@ const fullSchema = z.object({
   ...budgetSchema.shape,
   bookQuantity: z.string().min(1, "Please select the quantity of books"),
   ...deliverySchema.shape,
+}).refine((data) => data.whatsapp !== data.alternativeNo, {
+  message: "Phone No cannot be the same as WhatsApp number",
+  path: ["alternativeNo"],
 });
 
 type FormData = z.infer<typeof fullSchema>;
