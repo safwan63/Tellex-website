@@ -381,22 +381,22 @@ export default function Admin() {
                     
                     <div className="flex items-center gap-4">
                       {/* Status Toggle Buttons */}
-                      <div className="hidden sm:flex items-center gap-2 mr-4">
+                      <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1.5 sm:gap-2 mr-2 sm:mr-4">
                         {order.status === 'cancelled' ? (
-                          <div className="bg-red-100 text-red-600 px-4 py-2 rounded-lg font-bold text-xs border border-red-200">
-                            CANCELLED BY CUSTOMER
+                          <div className="bg-red-100 text-red-600 px-2 sm:px-4 py-1 sm:py-2 rounded-lg font-bold text-[10px] sm:text-xs border border-red-200 text-center leading-tight">
+                            CANCELLED<br className="sm:hidden" /> BY CUSTOMER
                           </div>
                         ) : (
                           <>
                             <button 
                               onClick={(e) => handleUpdateStatus(e, order.id, 'delivered')}
-                              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${order.status === 'delivered' ? 'bg-green-600 text-white shadow-sm' : 'bg-gray-100 text-gray-500 hover:bg-green-50 hover:text-green-600 border border-transparent hover:border-green-200'}`}
+                              className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all w-full sm:w-auto ${order.status === 'delivered' ? 'bg-green-600 text-white shadow-sm' : 'bg-gray-100 text-gray-500 hover:bg-green-50 hover:text-green-600 border border-transparent hover:border-green-200'}`}
                             >
                               Delivered
                             </button>
                             <button 
                               onClick={(e) => handleUpdateStatus(e, order.id, 'confirmed')}
-                              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${order.status === 'confirmed' || order.status === 'pending' ? 'bg-[#0E462B] text-white shadow-sm' : 'bg-gray-100 text-gray-500 hover:bg-orange-50 hover:text-orange-600 border border-transparent hover:border-orange-200'}`}
+                              className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all w-full sm:w-auto ${order.status === 'confirmed' || order.status === 'pending' ? 'bg-[#0E462B] text-white shadow-sm' : 'bg-gray-100 text-gray-500 hover:bg-orange-50 hover:text-orange-600 border border-transparent hover:border-orange-200'}`}
                             >
                               Pending
                             </button>
