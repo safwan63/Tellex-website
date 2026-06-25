@@ -46,7 +46,7 @@ const deliverySchema = z.object({
   city: z.string().min(2, "City is required"),
   pincode: z.string().regex(/^[0-9]{6}$/, "Must be a 6 digit pincode"),
   whatsapp: z.string().regex(/^[0-9]{10}$/, "Must be a valid 10 digit number"),
-  alternativeNo: z.string().refine(val => !val || /^[0-9]{10}$/.test(val), "Must be a valid 10 digit number").optional(),
+  alternativeNo: z.string().regex(/^[0-9]{10}$/, "Must be a valid 10 digit number"),
 });
 
 const quantitySchema = z.object({
@@ -284,7 +284,7 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
           city: data.city,
           pincode: data.pincode,
           whatsapp: data.whatsapp,
-          alternativeNo: data.alternativeNo || null
+          alternativeNo: data.alternativeNo,
         },
         address: `${data.firstName} ${data.lastName}, ${data.address}, ${data.city} - ${data.pincode}`,
         price: parseInt(data.budget || "389") * parseInt(data.bookQuantity || "1"),
@@ -799,8 +799,8 @@ export default function GuidedFlow({ type, language, onBack }: Props) {
                 {errors.whatsapp && <p className="text-red-500 text-xs mt-1">{errors.whatsapp.message}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Alternative No <span className="font-normal text-gray-400">(Optional)</span></label>
-                <input {...register("alternativeNo")} maxLength={10} className="w-full px-4 py-3 border-2 border-[#E5E5E0] rounded-lg focus:border-[#0E462B] outline-none" placeholder="Optional" />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Phone No</label>
+                <input {...register("alternativeNo")} maxLength={10} className="w-full px-4 py-3 border-2 border-[#E5E5E0] rounded-lg focus:border-[#0E462B] outline-none" placeholder="9876543210" />
                 {errors.alternativeNo && <p className="text-red-500 text-xs mt-1">{errors.alternativeNo.message}</p>}
               </div>
             </div>
