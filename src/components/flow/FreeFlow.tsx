@@ -33,6 +33,9 @@ const deliverySchema = z.object({
   pincode: z.string().regex(/^[0-9]{6}$/, "Must be a 6 digit pincode"),
   whatsapp: z.string().regex(/^[0-9]{10}$/, "Must be a valid 10 digit number"),
   alternativeNo: z.string().regex(/^[0-9]{10}$/, "Must be a valid 10 digit number"),
+}).refine((data) => data.whatsapp !== data.alternativeNo, {
+  message: "Phone No cannot be the same as WhatsApp number",
+  path: ["alternativeNo"],
 });
 
 const fullSchema = z.object({
