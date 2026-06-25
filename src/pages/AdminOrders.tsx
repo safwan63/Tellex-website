@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { collection, query, orderBy, getDocs, deleteDoc, doc, addDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
-import { Sparkles, Book, LogOut, ChevronDown, CheckCircle, Trash2, AlertCircle, Plus, X, Package, ExternalLink } from 'lucide-react';
+import { Sparkles, Book, LogOut, ChevronDown, CheckCircle, Trash2, AlertCircle, Plus, X, Package, ExternalLink, Search, MoreVertical, MapPin, Calendar, Hash, User, Clock, CreditCard } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
 
@@ -35,7 +35,9 @@ export default function Admin() {
   const navigate = useNavigate();
   
   const [orders, setOrders] = useState<Order[]>([]);
-  const [filter, setFilter] = useState<"all" | "mystery" | "vibe" | "active" | "cancelled">("all");
+  const [filter, setFilter] = useState<"all" | "mystery" | "vibe" | "active" | "cancelled" | "pending" | "delivered">("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeMenu, setActiveMenu] = useState<string | null>(null); // For 3-dot overflow menu
   const [isFetching, setIsFetching] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
@@ -237,104 +239,204 @@ export default function Admin() {
   };
 
   const filteredOrders = orders.filter(o => {
-    if (filter === "all") return true;
-    if (filter === "active") return o.status !== 'cancelled';
-    if (filter === "cancelled") return o.status === 'cancelled';
-    if (filter === "mystery") return o.type === 'mystery';
-    if (filter === "vibe") return o.type === 'vibe';
+    // 1. Filter by Status/Type
+    let matchesFilter = true;
+    if (filter === "active") matchesFilter = o.status !== 'cancelled';
+    else if (filter === "cancelled") matchesFilter = o.status === 'cancelled';
+    else if (filter === "mystery") matchesFilter = o.type === 'mystery';
+    else if (filter === "vibe") matchesFilter = o.type === 'vibe';
+    else if (filter === "pending") matchesFilter = o.status === 'pending';
+    else if (filter === "delivered") matchesFilter = o.status === 'delivered';
+    
+    if (!matchesFilter) return false;
+
+    // 2. Filter by Search Query
+    if (searchQuery.trim() !== '') {
+      const query = searchQuery.toLowerCase();
+      const searchStr = `
+        ${o.id.toLowerCase()} 
+        ${(o.delivery?.firstName || '').toLowerCase()} 
+        ${(o.delivery?.lastName || '').toLowerCase()} 
+        ${(o.delivery?.whatsapp || '').toLowerCase()} 
+        ${(o.delivery?.city || '').toLowerCase()}
+      `;
+      if (!searchStr.includes(query)) return false;
+    }
+    
     return true;
   });
+
+  // KPI Data
+  const stats = {
+    total: orders.length,
+    active: orders.filter(o => o.status !== 'cancelled').length,
+    mystery: orders.filter(o => o.type === 'mystery').length,
+    vibe: orders.filter(o => o.type === 'vibe').length,
+    cancelled: orders.filter(o => o.status === 'cancelled').length,
+    pending: orders.filter(o => o.status === 'pending').length,
+    delivered: orders.filter(o => o.status === 'delivered').length,
+  };
 
   return (
     <div className="min-h-screen bg-[#FAF9F6]">
       {/* Top Nav */}
-      <header className="bg-[#0E462B] text-[#e1cfbc] shadow-md">
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold" style={{ fontFamily: "'Playfair Display', serif" }}>
+              <h1 className="text-xl sm:text-2xl font-bold text-[#0E462B]" style={{ fontFamily: "'Playfair Display', serif" }}>
                 Tellex Admin
               </h1>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <button 
                 onClick={() => setShowManualModal(true)}
-                className="flex items-center text-sm font-medium hover:text-[#0E462B] transition-colors bg-[#e1cfbc] text-[#0E462B] px-4 py-2 rounded-lg font-bold"
+                className="flex items-center text-sm font-bold bg-[#0E462B] text-[#e1cfbc] px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg hover:bg-[#0E462B]/90 transition-colors shadow-sm"
               >
-                <Plus size={16} className="mr-2" />
-                New Order
+                <Plus size={16} className="mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">New Order</span>
+                <span className="sm:hidden">New</span>
               </button>
               <button 
                 onClick={handleLogout}
-                className="flex items-center text-sm font-medium hover:text-white transition-colors bg-white/10 px-4 py-2 rounded-lg"
+                className="flex items-center text-sm font-bold bg-gray-100 text-gray-700 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg hover:bg-gray-200 transition-colors"
               >
-                <LogOut size={16} className="mr-2" />
-                Sign Out
+                <LogOut size={16} className="sm:mr-2" />
+                <span className="hidden sm:inline">Sign Out</span>
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
-        {/* Stats & Filters — click any card to filter */}
-        <div className="mb-8">
-          <div className="flex flex-wrap gap-4">
+        {/* KPI Statistics */}
+        <div className="mb-6 overflow-x-auto pb-4 -mx-4 px-4 sm:px-0 sm:overflow-visible hide-scrollbar">
+          <div className="flex gap-3 sm:grid sm:grid-cols-2 lg:grid-cols-4 xl:flex xl:flex-wrap">
             {/* Total Orders */}
             <div 
-              onClick={() => setFilter(filter === "all" ? "all" : "all")}
-              className={`bg-white p-4 rounded-xl shadow-sm border min-w-[120px] cursor-pointer transition-all hover:shadow-md ${
-                filter === "all" ? "ring-2 ring-[#0E462B] border-[#0E462B]" : "border-[#E5E5E0]"
+              onClick={() => setFilter("all")}
+              className={`bg-white p-4 rounded-2xl shadow-sm border min-w-[130px] flex-1 cursor-pointer transition-all hover:shadow-md ${
+                filter === "all" ? "ring-2 ring-[#0E462B] border-[#0E462B]" : "border-gray-200"
               }`}
             >
-              <p className="text-gray-500 text-sm font-medium">Total Orders</p>
-              <p className="text-3xl font-bold text-gray-900">{orders.length}</p>
+              <p className="text-gray-500 text-xs sm:text-sm font-medium mb-1">Total Orders</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-900">{stats.total}</p>
             </div>
             {/* Active Orders */}
             <div 
-              onClick={() => setFilter(filter === "active" ? "all" : "active")}
-              className={`bg-white p-4 rounded-xl shadow-sm border min-w-[120px] cursor-pointer transition-all hover:shadow-md ${
-                filter === "active" ? "ring-2 ring-[#0E462B] border-[#0E462B]" : "border-[#E5E5E0]"
+              onClick={() => setFilter("active")}
+              className={`bg-white p-4 rounded-2xl shadow-sm border min-w-[130px] flex-1 cursor-pointer transition-all hover:shadow-md ${
+                filter === "active" ? "ring-2 ring-[#0E462B] border-[#0E462B]" : "border-gray-200"
               }`}
             >
-              <p className="text-gray-500 text-sm font-medium">Active Orders</p>
-              <p className="text-3xl font-bold text-[#0E462B]">{orders.filter(o => o.status !== 'cancelled').length}</p>
+              <p className="text-gray-500 text-xs sm:text-sm font-medium mb-1">Active</p>
+              <p className="text-2xl sm:text-3xl font-bold text-[#0E462B]">{stats.active}</p>
             </div>
             {/* Mystery Pick */}
             <div 
-              onClick={() => setFilter(filter === "mystery" ? "all" : "mystery")}
-              className={`bg-white p-4 rounded-xl shadow-sm border min-w-[120px] cursor-pointer transition-all hover:shadow-md ${
-                filter === "mystery" ? "ring-2 ring-purple-500 border-purple-500" : "border-[#E5E5E0]"
+              onClick={() => setFilter("mystery")}
+              className={`bg-white p-4 rounded-2xl shadow-sm border min-w-[130px] flex-1 cursor-pointer transition-all hover:shadow-md ${
+                filter === "mystery" ? "ring-2 ring-purple-500 border-purple-500" : "border-gray-200"
               }`}
             >
-              <p className="text-gray-500 text-sm font-medium">Mystery Pick</p>
-              <p className="text-3xl font-bold text-purple-700">{orders.filter(o => o.type === 'mystery').length}</p>
+              <p className="text-gray-500 text-xs sm:text-sm font-medium mb-1">Mystery Pick</p>
+              <p className="text-2xl sm:text-3xl font-bold text-purple-700">{stats.mystery}</p>
             </div>
             {/* Vibe Pick */}
             <div 
-              onClick={() => setFilter(filter === "vibe" ? "all" : "vibe")}
-              className={`bg-white p-4 rounded-xl shadow-sm border min-w-[120px] cursor-pointer transition-all hover:shadow-md ${
-                filter === "vibe" ? "ring-2 ring-blue-500 border-blue-500" : "border-[#E5E5E0]"
+              onClick={() => setFilter("vibe")}
+              className={`bg-white p-4 rounded-2xl shadow-sm border min-w-[130px] flex-1 cursor-pointer transition-all hover:shadow-md ${
+                filter === "vibe" ? "ring-2 ring-blue-500 border-blue-500" : "border-gray-200"
               }`}
             >
-              <p className="text-gray-500 text-sm font-medium">Vibe Pick</p>
-              <p className="text-3xl font-bold text-blue-700">{orders.filter(o => o.type === 'vibe').length}</p>
+              <p className="text-gray-500 text-xs sm:text-sm font-medium mb-1">Vibe Pick</p>
+              <p className="text-2xl sm:text-3xl font-bold text-blue-700">{stats.vibe}</p>
+            </div>
+            {/* Pending Orders (NEW) */}
+            <div 
+              onClick={() => setFilter("pending")}
+              className={`bg-white p-4 rounded-2xl shadow-sm border min-w-[130px] flex-1 cursor-pointer transition-all hover:shadow-md ${
+                filter === "pending" ? "ring-2 ring-orange-500 border-orange-500 bg-orange-50/30" : "border-gray-200"
+              }`}
+            >
+              <p className="text-orange-600 text-xs sm:text-sm font-medium mb-1">Pending</p>
+              <p className="text-2xl sm:text-3xl font-bold text-orange-600">{stats.pending}</p>
+            </div>
+            {/* Delivered Orders (NEW) */}
+            <div 
+              onClick={() => setFilter("delivered")}
+              className={`bg-white p-4 rounded-2xl shadow-sm border min-w-[130px] flex-1 cursor-pointer transition-all hover:shadow-md ${
+                filter === "delivered" ? "ring-2 ring-green-500 border-green-500 bg-green-50/30" : "border-gray-200"
+              }`}
+            >
+              <p className="text-green-600 text-xs sm:text-sm font-medium mb-1">Delivered</p>
+              <p className="text-2xl sm:text-3xl font-bold text-green-600">{stats.delivered}</p>
             </div>
             {/* Cancelled */}
             <div 
-              onClick={() => setFilter(filter === "cancelled" ? "all" : "cancelled")}
-              className={`p-4 rounded-xl shadow-sm border min-w-[120px] cursor-pointer transition-all hover:shadow-md ${
+              onClick={() => setFilter("cancelled")}
+              className={`p-4 rounded-2xl shadow-sm border min-w-[130px] flex-1 cursor-pointer transition-all hover:shadow-md ${
                 filter === "cancelled" ? "ring-2 ring-red-500 border-red-500 bg-red-50" : "border-red-100 bg-red-50/30"
               }`}
             >
-              <p className="text-red-500 text-sm font-bold">Cancelled</p>
-              <p className="text-3xl font-bold text-red-600">{orders.filter(o => o.status === 'cancelled').length}</p>
+              <p className="text-red-500 text-xs sm:text-sm font-bold mb-1">Cancelled</p>
+              <p className="text-2xl sm:text-3xl font-bold text-red-600">{stats.cancelled}</p>
             </div>
           </div>
-          {filter !== "all" && (
-            <p className="mt-3 text-sm text-gray-500">Showing <span className="font-bold text-gray-800">{filteredOrders.length}</span> {filter} orders. <button onClick={() => setFilter("all")} className="text-[#0E462B] font-bold underline ml-1">Clear filter</button></p>
-          )}
+        </div>
+
+        {/* Sticky Search & Filter Section */}
+        <div className="sticky top-[69px] sm:top-[73px] z-40 bg-[#FAF9F6] pt-2 pb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div className="flex flex-col gap-3">
+            {/* Search Bar */}
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search size={18} className="text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search by Name, Phone, City, or Order ID..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-white border border-gray-200 rounded-xl py-3 pl-10 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E462B]/20 focus:border-[#0E462B] shadow-sm transition-all"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+
+            {/* Filter Chips */}
+            <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+              {[
+                { id: "all", label: "All", count: stats.total },
+                { id: "active", label: "Active", count: stats.active },
+                { id: "pending", label: "Pending", count: stats.pending },
+                { id: "delivered", label: "Delivered", count: stats.delivered },
+                { id: "mystery", label: "Mystery", count: stats.mystery },
+                { id: "vibe", label: "Vibe", count: stats.vibe },
+                { id: "cancelled", label: "Cancelled", count: stats.cancelled },
+              ].map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setFilter(f.id as any)}
+                  className={`flex items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-colors border ${
+                    filter === f.id
+                      ? "bg-[#0E462B] text-white border-[#0E462B]"
+                      : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  {f.label} <span className={`opacity-60 text-[11px]`}>({f.count})</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Orders List */}
@@ -352,90 +454,130 @@ export default function Admin() {
           ) : (
             <div className="divide-y divide-[#E5E5E0]">
               {filteredOrders.map(order => (
-                <div key={order.id} className="p-6 hover:bg-gray-50 transition-colors">
+                <div key={order.id} className="relative border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
                   <div 
-                    className="flex justify-between items-center cursor-pointer"
+                    className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 cursor-pointer"
                     onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}
                   >
-                    <div className="flex items-center gap-4">
-                      {order.type === 'mystery' ? (
-                        <div className="bg-purple-100 text-purple-700 p-3 rounded-full"><Sparkles size={20} /></div>
-                      ) : (
-                        <div className="bg-blue-100 text-blue-700 p-3 rounded-full"><Book size={20} /></div>
-                      )}
-                      
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-lg font-bold text-gray-900">
-                            {order.delivery?.firstName} {order.delivery?.lastName}
-                          </h3>
-                          <span className="text-sm font-medium text-gray-500 uppercase tracking-wider bg-gray-100 px-2 py-0.5 rounded ml-2">
-                            Mode: {order.mode}
-                          </span>
+                    {/* Header Row: Initials + Details + Status + Menu */}
+                    <div className="flex items-start justify-between w-full">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-sm shrink-0 uppercase">
+                          {order.delivery?.firstName?.charAt(0) || '?'}{order.delivery?.lastName?.charAt(0) || ''}
                         </div>
-                        <p className="text-sm text-gray-500 mt-1">
-                          {order.delivery?.city} • <span className="font-bold text-[#0E462B]">₹{getDisplayPrice(order)}</span> (₹{getBudgetPerBook(order)} each) • {new Date(order.createdAt?.toMillis() || Date.now()).toLocaleDateString()}
-                        </p>
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <h3 className="text-[16px] font-semibold text-gray-900 leading-none">
+                              {order.delivery?.firstName} {order.delivery?.lastName}
+                            </h3>
+                            <span className={`px-2 py-0.5 rounded-md text-[11px] font-semibold tracking-wide ${
+                              order.status === 'delivered' ? 'bg-green-100 text-green-700' :
+                              order.status === 'pending' ? 'bg-orange-100 text-orange-700' :
+                              order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                              'bg-blue-100 text-blue-700'
+                            }`}>
+                              {order.status.toUpperCase()}
+                            </span>
+                            {order.type === 'mystery' && <Sparkles size={12} className="text-purple-500" />}
+                          </div>
+                          
+                          <div className="flex flex-wrap items-center text-[13px] text-gray-500 gap-x-3 gap-y-1">
+                            <span className="flex items-center gap-1"><MapPin size={12}/> {order.delivery?.city || 'Unknown'}</span>
+                            <span className="flex items-center gap-1"><Calendar size={12}/> {new Date(order.createdAt?.toMillis() || Date.now()).toLocaleDateString()}</span>
+                            <span className="flex items-center gap-1"><Package size={12}/> {order.mode === 'guided' ? 'Guided' : 'Free'}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3 text-right">
+                        <div className="hidden sm:block">
+                          <p className="text-[16px] font-bold text-gray-900 leading-none mb-1">₹{getDisplayPrice(order)}</p>
+                          <p className="text-[11px] font-medium text-gray-400">₹{getBudgetPerBook(order)}/book</p>
+                        </div>
+                        
+                        {/* 3 Dot Menu Container */}
+                        <div className="relative">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setActiveMenu(activeMenu === order.id ? null : order.id); }}
+                            className="p-2 -mr-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                          >
+                            <MoreVertical size={20} />
+                          </button>
+                          
+                          {/* Dropdown Menu */}
+                          {activeMenu === order.id && (
+                            <>
+                              <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setActiveMenu(null); }} />
+                              <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50">
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); setExpandedOrder(expandedOrder === order.id ? null : order.id); setActiveMenu(null); }}
+                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                                >
+                                  <ExternalLink size={16} className="text-gray-400"/> View Details
+                                </button>
+                                {order.status !== 'cancelled' && (
+                                  <>
+                                    <button 
+                                      onClick={(e) => { e.stopPropagation(); handleUpdateStatus(e, order.id, 'delivered'); setActiveMenu(null); }}
+                                      className="w-full text-left px-4 py-2 text-sm text-green-700 hover:bg-green-50 flex items-center gap-2"
+                                    >
+                                      <CheckCircle size={16} className="text-green-500"/> Mark Delivered
+                                    </button>
+                                    <button 
+                                      onClick={(e) => { e.stopPropagation(); handleUpdateStatus(e, order.id, 'pending'); setActiveMenu(null); }}
+                                      className="w-full text-left px-4 py-2 text-sm text-orange-700 hover:bg-orange-50 flex items-center gap-2"
+                                    >
+                                      <Clock size={16} className="text-orange-500"/> Mark Pending
+                                    </button>
+                                  </>
+                                )}
+                                <div className="h-px bg-gray-100 my-1 mx-2" />
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); setOrderToDelete(order.id); setActiveMenu(null); }}
+                                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                >
+                                  <Trash2 size={16} className="text-red-500"/> Delete Order
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-4">
-                      {/* Status Toggle Buttons */}
-                      <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1.5 sm:gap-2 mr-2 sm:mr-4">
-                        {order.status === 'cancelled' ? (
-                          <div className="bg-red-100 text-red-600 px-2 sm:px-4 py-1 sm:py-2 rounded-lg font-bold text-[10px] sm:text-xs border border-red-200 text-center leading-tight">
-                            CANCELLED<br className="sm:hidden" /> BY CUSTOMER
-                          </div>
-                        ) : (
-                          <>
-                            <button 
-                              onClick={(e) => handleUpdateStatus(e, order.id, 'delivered')}
-                              className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all w-full sm:w-auto ${order.status === 'delivered' ? 'bg-green-600 text-white shadow-sm' : 'bg-gray-100 text-gray-500 hover:bg-green-50 hover:text-green-600 border border-transparent hover:border-green-200'}`}
-                            >
-                              Delivered
-                            </button>
-                            <button 
-                              onClick={(e) => handleUpdateStatus(e, order.id, 'confirmed')}
-                              className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all w-full sm:w-auto ${order.status === 'confirmed' || order.status === 'pending' ? 'bg-[#0E462B] text-white shadow-sm' : 'bg-gray-100 text-gray-500 hover:bg-orange-50 hover:text-orange-600 border border-transparent hover:border-orange-200'}`}
-                            >
-                              Pending
-                            </button>
-                          </>
-                        )}
+                    {/* Mobile Amount Row */}
+                    <div className="sm:hidden flex items-center justify-between w-full mt-2 pt-2 border-t border-gray-50">
+                      <span className="text-[12px] font-medium text-gray-500">Total Amount</span>
+                      <div className="text-right">
+                        <span className="text-[15px] font-bold text-gray-900 leading-none">₹{getDisplayPrice(order)}</span>
+                        <span className="text-[11px] font-medium text-gray-400 ml-2">₹{getBudgetPerBook(order)}/ea</span>
                       </div>
+                    </div>
 
-                      {orderToDelete === order.id ? (
-                        <div className="flex items-center gap-3 bg-red-50 p-2 rounded-lg border border-red-100">
-                          <span className="text-xs font-bold text-red-600 uppercase flex items-center gap-1">
-                            <AlertCircle size={14} /> Are you sure?
-                          </span>
-                          <button 
-                            disabled={isDeleting}
-                            onClick={(e) => { e.stopPropagation(); handleDeleteOrder(order.id); }}
-                            className="bg-red-600 text-white text-xs px-3 py-1.5 rounded font-bold hover:bg-red-700 transition-colors"
-                          >
-                            {isDeleting ? '...' : 'YES'}
-                          </button>
+                    {/* Delete Confirmation Inline */}
+                    {orderToDelete === order.id && (
+                      <div className="w-full mt-3 flex items-center justify-between gap-3 bg-red-50 p-3 rounded-xl border border-red-100">
+                        <span className="text-[13px] font-bold text-red-700 flex items-center gap-1.5">
+                          <AlertCircle size={16} /> Delete this order?
+                        </span>
+                        <div className="flex gap-2">
                           <button 
                             disabled={isDeleting}
                             onClick={(e) => { e.stopPropagation(); setOrderToDelete(null); }}
-                            className="bg-gray-200 text-gray-700 text-xs px-3 py-1.5 rounded font-bold hover:bg-gray-300 transition-colors"
+                            className="bg-white border border-gray-200 text-gray-700 text-xs px-4 py-2 rounded-lg font-bold hover:bg-gray-50 transition-colors"
                           >
-                            NO
+                            Cancel
+                          </button>
+                          <button 
+                            disabled={isDeleting}
+                            onClick={(e) => { e.stopPropagation(); handleDeleteOrder(order.id); }}
+                            className="bg-red-600 text-white text-xs px-4 py-2 rounded-lg font-bold hover:bg-red-700 transition-colors"
+                          >
+                            {isDeleting ? '...' : 'Delete'}
                           </button>
                         </div>
-                      ) : (
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); setOrderToDelete(order.id); }}
-                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                          title="Delete Order"
-                        >
-                          <Trash2 size={20} />
-                        </button>
-                      )}
-                      
-                      <ChevronDown size={20} className={`text-gray-400 transition-transform ${expandedOrder === order.id ? 'rotate-180' : ''}`} />
-                    </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Expanded Details */}
